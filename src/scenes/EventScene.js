@@ -3,6 +3,7 @@ import { W, H, C, T, hex, RARITY, FONT_DISPLAY } from '../ui/theme.js';
 import { panel, button, floatText } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
 import { buildBaseTextures, heroKey, iconKey, idleAnim } from '../art/sprites.js';
+import { picKey } from '../art/pictures.js';
 import { HERO_BY_ID } from '../data/heroes.js';
 import { EVENTS, TRIVIA } from '../data/events.js';
 import { floorDef } from '../data/enemies.js';
@@ -37,8 +38,11 @@ export default class EventScene extends Phaser.Scene {
   header(title, body, icon) {
     this.layer.add(this.add.image(PX + 40, 66, iconKey(icon)).setScale(1.3));
     this.layer.add(this.add.text(PX + 70, 52, title.toUpperCase(), { ...T.h2, fontSize: '22px' }));
-    if (this.mode !== 'trivia' && this.ev?.art) this.layer.add(this.add.image(PX + PW - 60, 66, this.ev.art).setScale(0.8));
-    const t = this.add.text(PX + 30, 96, body, { ...T.body, fontSize: '23px', wordWrap: { width: PW - 60 }, lineSpacing: 2 });
+    // Each room has a picture beside its title (Charlie for the cat room, the sphinx for trivia).
+    const art = this.mode === 'trivia' ? picKey('sphinx') : (this.ev?.art || picKey(this.ev?.id));
+    const hasArt = this.textures.exists(art);
+    if (hasArt) this.layer.add(this.add.image(PX + PW - 60, 62, art));
+    const t = this.add.text(PX + 30, 96, body, { ...T.body, fontSize: '23px', wordWrap: { width: PW - (hasArt ? 150 : 60) }, lineSpacing: 2 });
     this.layer.add(t);
     return 96 + t.height + 16;
   }
