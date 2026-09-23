@@ -245,24 +245,36 @@ const ENEMY_MAPS = {
   ],
 };
 
-// Charlie, Andrew's cat. Gray tabby: change CHARLIE_PAL to recolor.
+// Charlie, Andrew's cat. Tuxedo: black coat, white muzzle, chest and paws.
+// A black coat vanishes on the dark backgrounds, so the sprite gets a soft
+// gray outline (O) added around its silhouette at build time.
 const CHARLIE_MAP = [
   '..X.....X.......',
-  '..XX...XX.......',
-  '..XDXDXDX.......',
+  '..XP...PX.......',
+  '..XXXXXXX.......',
   '..XEXXXEX.......',
   '..XXXNXXX.......',
   '...XWWWX........',
-  '...XXXXXX.......',
-  '..XXXWWXXX......',
-  '..XDXWWWXX....X.',
-  '..XXDWWXDXX...X.',
-  '..XDXXXXXDX..XX.',
+  '...XXWXXX.......',
+  '..XXWWWXXX......',
+  '..XXWWWWXX....X.',
+  '..XXWWWWXXX...X.',
+  '..XXXWWXXXX..XX.',
   '..XXXXXXXXXXXX..',
   '..XX.XX.XXXX....',
   '..WW.WW.........',
 ];
-const CHARLIE_PAL = { X: 0x8a8f99, D: 0x5c616b, W: 0xf2f2f2, E: 0x7bd36b, N: 0xe99aa8 };
+const CHARLIE_PAL = { X: 0x1c1c22, O: 0x6e6e84, P: 0xc97a8a, W: 0xf4f4f4, E: 0xd8e04a, N: 0xe99aa8 };
+
+// Pads a pixel map by one cell and marks every empty cell touching the shape with `ch`.
+function outlined(rows, ch) {
+  const w = rows[0].length + 2;
+  const grid = ['.'.repeat(w), ...rows.map((r) => `.${r}.`), '.'.repeat(w)].map((r) => r.split(''));
+  const solid = (y, x) => grid[y]?.[x] !== undefined && grid[y][x] !== '.' && grid[y][x] !== ch;
+  return grid.map((row, y) => row.map((c, x) => (
+    c === '.' && (solid(y - 1, x) || solid(y + 1, x) || solid(y, x - 1) || solid(y, x + 1)) ? ch : c
+  )).join(''));
+}
 export const CHARLIE = 'charlie';
 
 const ICONS = {
@@ -308,7 +320,7 @@ export function buildBaseTextures(scene) {
     paint(scene, portraitKey(id), map.slice(0, 10), pal, 3);
   }
   for (const [k, rows] of Object.entries(ICONS)) paint(scene, iconKey(k), rows, ICON_PAL, 3);
-  paint(scene, CHARLIE, CHARLIE_MAP, CHARLIE_PAL, 4);
+  paint(scene, CHARLIE, outlined(CHARLIE_MAP, 'O'), CHARLIE_PAL, 4);
 
   // A soft shadow ellipse and a sparkle for effects
   if (!scene.textures.exists('shadow')) {
