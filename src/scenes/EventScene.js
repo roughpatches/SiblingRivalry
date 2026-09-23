@@ -37,6 +37,7 @@ export default class EventScene extends Phaser.Scene {
   header(title, body, icon) {
     this.layer.add(this.add.image(PX + 40, 66, iconKey(icon)).setScale(1.3));
     this.layer.add(this.add.text(PX + 70, 52, title.toUpperCase(), { ...T.h2, fontSize: '22px' }));
+    if (this.mode !== 'trivia' && this.ev?.art) this.layer.add(this.add.image(PX + PW - 60, 66, this.ev.art).setScale(0.8));
     const t = this.add.text(PX + 30, 96, body, { ...T.body, fontSize: '23px', wordWrap: { width: PW - 60 }, lineSpacing: 2 });
     this.layer.add(t);
     return 96 + t.height + 16;

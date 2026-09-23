@@ -245,6 +245,26 @@ const ENEMY_MAPS = {
   ],
 };
 
+// Charlie, Andrew's cat. Gray tabby: change CHARLIE_PAL to recolor.
+const CHARLIE_MAP = [
+  '..X.....X.......',
+  '..XX...XX.......',
+  '..XDXDXDX.......',
+  '..XEXXXEX.......',
+  '..XXXNXXX.......',
+  '...XWWWX........',
+  '...XXXXXX.......',
+  '..XXXWWXXX......',
+  '..XDXWWWXX....X.',
+  '..XXDWWXDXX...X.',
+  '..XDXXXXXDX..XX.',
+  '..XXXXXXXXXXXX..',
+  '..XX.XX.XXXX....',
+  '..WW.WW.........',
+];
+const CHARLIE_PAL = { X: 0x8a8f99, D: 0x5c616b, W: 0xf2f2f2, E: 0x7bd36b, N: 0xe99aa8 };
+export const CHARLIE = 'charlie';
+
 const ICONS = {
   combat: ['W......W', '.W....W.', '..W..W..', '...WW...', '...WW...', '..G..G..', '.G....G.', 'G......G'],
   treasure: ['........', '.GGGGGG.', 'GBBBBBBG', 'GGGGGGGG', 'GBBYYBBG', 'GBBBBBBG', 'GGGGGGGG', '........'],
@@ -288,6 +308,7 @@ export function buildBaseTextures(scene) {
     paint(scene, portraitKey(id), map.slice(0, 10), pal, 3);
   }
   for (const [k, rows] of Object.entries(ICONS)) paint(scene, iconKey(k), rows, ICON_PAL, 3);
+  paint(scene, CHARLIE, CHARLIE_MAP, CHARLIE_PAL, 4);
 
   // A soft shadow ellipse and a sparkle for effects
   if (!scene.textures.exists('shadow')) {

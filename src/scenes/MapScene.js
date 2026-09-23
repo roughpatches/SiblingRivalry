@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { W, H, C, T, hex, RARITY } from '../ui/theme.js';
 import { panel, button, bar, tooltip } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
-import { buildBaseTextures, heroKey, portraitKey, iconKey } from '../art/sprites.js';
+import { buildBaseTextures, heroKey, portraitKey, iconKey, CHARLIE } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
 import { floorDef } from '../data/enemies.js';
 import { makeGear, makeConsumable, statLine, CONSUMABLES } from '../data/items.js';
@@ -308,7 +308,8 @@ export default class MapScene extends Phaser.Scene {
     for (const id of speakers) lines.push(`${HERO_BY_ID[id].name}: "${pickLine(id, 'rest')}"`);
     this.modal({
       title: 'REST STOP',
-      body: 'A campfire someone else built. Everyone heals 40%. Anyone knocked out gets back up.\n\n' + lines.join('\n'),
+      body: 'A campfire someone else built. Everyone heals 40%. Anyone knocked out gets back up. Charlie is here. Nobody knows how.\n\n' + lines.join('\n'),
+      pic: CHARLIE,
       buttons: [{ label: 'Onward', onClick: () => this.closeModal() }],
     });
   }
@@ -373,7 +374,8 @@ export default class MapScene extends Phaser.Scene {
     let y = 0;
     const title = this.add.text(mw / 2, 22, o.title, { ...T.h2, fontSize: '22px', color: hex(o.danger ? C.red : C.gold) }).setOrigin(0.5, 0);
     content.push(title); y = 60;
-    const body = this.add.text(28, y, o.body, { ...T.body, wordWrap: { width: mw - 56 }, lineSpacing: 2 });
+    if (o.pic) content.push(this.add.image(mw - 46, 40, o.pic).setScale(0.7));
+    const body = this.add.text(28, y, o.body, { ...T.body, wordWrap: { width: mw - (o.pic ? 110 : 56) }, lineSpacing: 2 });
     content.push(body); y += body.height + 12;
     const itemBlock = (it) => {
       const col = hex(RARITY[it.rarity]?.color ?? C.dim);
@@ -382,8 +384,10 @@ export default class MapScene extends Phaser.Scene {
       const sub = it.kind === 'gear'
         ? `${RARITY[it.rarity].name} ${it.slot} · ${statLine(it.stats)}${it.owner ? `\nSignature: doubled for ${HERO_BY_ID[it.owner].name}` : ''}`
         : it.desc;
-      const s = this.add.text(28, y, sub, { ...T.small, wordWrap: { width: mw - 56 } });
-      content.push(s); y += s.height + 10;
+      const s = this.add.text(28, y, sub, { ...T.small, wordWrap: { width: mw - (it.pic ? 120 : 56) } });
+      content.push(s);
+      if (it.pic) content.push(this.add.image(mw - 50, y + 4, it.pic).setScale(0.6));
+      y += s.height + 10;
     };
     if (o.item) itemBlock(o.item);
     if (o.extraItem) itemBlock(o.extraItem);
