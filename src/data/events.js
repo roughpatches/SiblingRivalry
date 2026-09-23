@@ -122,6 +122,28 @@ export const EVENTS = [
     success: { text: 'Box 47 of 112: something that looks legendary, wrapped in a 1998 Ridgefield newspaper.', loot: 0.2, xp: 12 },
     fail: { text: 'The "MISC (IMPORTANT)" box falls on someone. It was all cables.', dmg: 12 },
   },
+  {
+    id: 'blackdiamond', title: 'The Black Diamond', stat: 'grit', dc: 13,
+    text: 'A frozen chute drops to the next landing. Somehow there are skis. Somehow this has become a race.',
+    lines: {
+      tom: 'Tom announces he is the fastest skier in the family. He has announced this every year since 1999.',
+      stephen: 'Stephen says nothing and is already at the bottom.',
+      andrew: 'Andrew files a formal objection to Tom\'s claim, then points his skis straight downhill.',
+      chachi: 'Chachi is gone before anyone agrees on the rules. She will be insufferable about it.',
+    },
+    success: { text: 'You win the race. Nobody agrees you won the race. There is a stash at the bottom.', gold: 35, xp: 12 },
+    fail: { text: 'Yard sale. Poles, skis and dignity everywhere.', dmg: 13 },
+  },
+  {
+    id: 'cat', title: 'The Cat in the Corridor', stat: 'charm', dc: 12, bonus: { andrew: 4 },
+    text: 'A cat sits in the middle of the corridor, staring. It looks a little like Charlie. It will not move.',
+    lines: {
+      andrew: 'Andrew is already on the floor. It is not Charlie. He does not care.',
+      tom: 'Tom proposes a structured negotiation with the cat. The cat licks its paw.',
+    },
+    success: { text: 'The cat allows it. It leads you to a stash behind a loose stone, then leaves without saying goodbye.', loot: 0.2, xp: 10 },
+    fail: { text: 'The cat has decided you are not Andrew. Scratches for everyone.', dmgAll: 5 },
+  },
 ];
 
 // The Pub Trivia Sphinx asks a real question. Andrew's Trivia Night removes two wrong answers.
@@ -144,5 +166,6 @@ export const TRIVIA = [
   { q: 'The Boston Marathon starts in which Massachusetts town?', a: ['Hopkinton', 'Framingham', 'Natick', 'Wellesley'], correct: 0 },
   { q: 'What is the Canadian two-dollar coin nicknamed?', a: ['Toonie', 'Loonie', 'Twoonie', 'Deuce'], correct: 0 },
   { q: 'Which Toronto landmark was the world\'s tallest freestanding structure for over 30 years?', a: ['CN Tower', 'First Canadian Place', 'Rogers Centre', 'Scotiabank Arena'], correct: 0 },
+  { q: 'Which Hawaiian volcano gets snow on its summit most winters?', a: ['Mauna Kea', 'Diamond Head', 'Kilauea', 'Koko Head'], correct: 0 },
   { q: 'What is the official name of the Massachusetts state legislature?', a: ['The Great and General Court', 'The General Assembly', 'The Commonwealth Congress', 'The Bay State Legislature'], correct: 0 },
 ];
