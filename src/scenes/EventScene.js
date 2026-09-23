@@ -4,6 +4,7 @@ import { panel, button, floatText } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
 import { buildBaseTextures, heroKey, iconKey, idleAnim } from '../art/sprites.js';
 import { picKey } from '../art/pictures.js';
+import { sfx, music } from '../systems/sound.js';
 import { HERO_BY_ID } from '../data/heroes.js';
 import { EVENTS, TRIVIA } from '../data/events.js';
 import { floorDef } from '../data/enemies.js';
@@ -27,6 +28,7 @@ export default class EventScene extends Phaser.Scene {
   create() {
     buildBaseTextures(this);
     backdrop(this, floorDef(G.run.floor).tint, { torches: [[60, 100], [W - 60, 100]] });
+    music(floorDef(G.run.floor).theme || 'basement');
     this.cameras.main.fadeIn(220, 0, 0, 0);
     panel(this, PX, 30, PW, 480, { fill: C.stone });
     this.layer = this.add.container(0, 0);
@@ -96,6 +98,7 @@ export default class EventScene extends Phaser.Scene {
     this.layer.add(this.add.sprite(PX + 110, y + 90, heroKey(h.id)).setScale(1.3).play(idleAnim(heroKey(h.id))));
     const roll = d20();
     const dice = this.d20Graphic(PX + PW / 2, y + 90);
+    sfx('dice');
     await this.rollAnim(dice, roll);
     const total = roll + mod;
     const nat20 = roll === 20, nat1 = roll === 1;
@@ -113,6 +116,7 @@ export default class EventScene extends Phaser.Scene {
     this.tweens.add({ targets: vt, scale: 1, duration: 280, ease: 'Back.easeOut' });
     if (nat20) this.cameras.main.flash(250, 255, 220, 120);
     if (nat1) this.cameras.main.shake(250, 0.01);
+    sfx(nat20 ? 'nat20' : success ? 'success' : 'fail');
 
     const out = success ? ev.success : ev.fail;
     const results = this.applyOutcome(out, h, success);
@@ -232,10 +236,12 @@ export default class EventScene extends Phaser.Scene {
       text = `"Correct," purrs the sphinx. "${q.a[q.correct]}." It hands over the quiz-night prizes.`;
       r = this.applyOutcome({ gold: 25, xp: 16, loot: 0.2 }, h, true);
       this.cameras.main.flash(200, 255, 220, 120);
+      sfx('success');
     } else {
       text = `"Wrong. It was ${q.a[q.correct]}." The sphinx bops ${HERO_BY_ID[h.id].name} on the head.`;
       r = this.applyOutcome({ dmg: 12 }, h, false);
       this.cameras.main.shake(200, 0.008);
+      sfx('fail');
     }
     let y = this.header('The Pub Trivia Sphinx', text, 'trivia');
     const t = this.add.text(PX + 30, y, r.join('   '), { ...T.body, color: hex(o.right ? C.green : C.red), wordWrap: { width: PW - 60 } });

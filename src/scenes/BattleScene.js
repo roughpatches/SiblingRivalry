@@ -4,6 +4,7 @@ import { panel, button, bar, floatText, tooltip } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
 import { scenery, hasTorches } from '../ui/scenery.js';
 import * as fx from '../ui/fx.js';
+import { sfx, music, stopMusic } from '../systems/sound.js';
 import { buildBaseTextures, heroKey, portraitKey, enemyTexture, frameKey, idleAnim } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
 import { ENEMIES, FLOORS, floorDef } from '../data/enemies.js';
@@ -35,6 +36,7 @@ export default class BattleScene extends Phaser.Scene {
     const fd = floorDef(G.run.floor);
     backdrop(this, fd.tint, { torches: hasTorches(fd.theme) ? [[40, 110], [W - 40, 110]] : false });
     scenery(this, fd.theme);
+    music(this.kind === 'boss' ? 'boss' : 'battle');
     // shade the floor strip so fighters' shadows read against it
     const fl = this.add.graphics().setDepth(-5);
     fl.fillStyle(0x000000, 0.2).fillRect(0, 360, W, 40);
@@ -434,12 +436,14 @@ export default class BattleScene extends Phaser.Scene {
         this.log('Tom plots every enemy in "Low Value / High Effort." Their defenses crumble.');
         this.flashAll(E(), C.blue);
         fx.matrix(this, E());
+        sfx('buff');
         E().forEach((e) => { this.addStatus(e, 'defDown', 3, 0.5); floatText(this, e.x, e.y - 40, 'DEF-', C.blue, 22); });
         break;
       case 'bulwark': {
         const amt = 10 + 2 * lvl;
         this.log(`Tom snaps together a LEGO wall. Everyone gets a ${amt} shield.`);
         fx.legoWall(this, this.liveHeroes());
+        sfx('buff');
         this.liveHeroes().forEach((h) => { h.shield += amt; this.refreshTags(h); floatText(this, h.x, h.y - 40, `+${amt} SHLD`, C.gold, 20); });
         break;
       }
@@ -475,6 +479,7 @@ export default class BattleScene extends Phaser.Scene {
         this.log('Andrew: "OBJECTION!" Every enemy is now very focused on Andrew.');
         this.cameras.main.shake(120, 0.004);
         fx.gavel(this, u, true);
+        sfx('gavel');
         this.addStatus(u, 'taunt', 2);
         this.addStatus(u, 'defUp', 2, 0.6);
         floatText(this, u.x, u.y - 50, 'OBJECTION!', C.red, 28);
@@ -482,6 +487,7 @@ export default class BattleScene extends Phaser.Scene {
       case 'order':
         this.log(`Andrew raises a point of order against ${target.name}.`);
         fx.gavel(this, target, false);
+        sfx('gavel');
         await this.lunge(u, target);
         if (this.attack(u, target, 0.6, { verb: sk.name }) && target.alive) {
           if (!target.boss || rng() < 0.5) { this.addStatus(target, 'stun', 1); floatText(this, target.x, target.y - 60, 'STUNNED', C.gold, 20); }
@@ -491,6 +497,7 @@ export default class BattleScene extends Phaser.Scene {
       case 'amendment':
         this.log('Andrew inserts favorable language. Party ATK +35%.');
         fx.amendment(this, this.liveHeroes());
+        sfx('buff');
         this.liveHeroes().forEach((h) => { this.addStatus(h, 'atkUp', 3, 0.35); floatText(this, h.x, h.y - 40, 'ATK+', C.orange, 20); });
         break;
       case 'kick': {
@@ -510,12 +517,14 @@ export default class BattleScene extends Phaser.Scene {
         this.log('Chachi: "This is going to be legen... wait for it..."');
         this.addStatus(u, 'charging', 99);
         fx.chargeAura(this, u);
+        sfx('charge');
         u.chargeTarget = target;
         floatText(this, u.x, u.y - 50, 'wait for it...', C.purple, 22);
         break;
       case 'suitup':
         this.log('Chachi: "SUIT UP!" Everyone is faster and hits harder.');
         fx.suitUp(this, this.liveHeroes());
+        sfx('buff');
         this.liveHeroes().forEach((h) => { this.addStatus(h, 'spdUp', 3, 4); this.addStatus(h, 'atkUp', 3, 0.2); floatText(this, h.x, h.y - 40, 'SUITED UP', C.green, 18); });
         break;
     }
@@ -533,6 +542,7 @@ export default class BattleScene extends Phaser.Scene {
     await this.lunge(u, t, 260);
     this.cameras.main.shake(220, 0.01);
     fx.legendaryBurst(this, t);
+    sfx('boom');
     this.attack(u, t, 3.2, { verb: 'Legendary' });
     await this.wait(650);
     this.endTurn(u);
@@ -636,6 +646,7 @@ export default class BattleScene extends Phaser.Scene {
   attack(src, tgt, mult, opts = {}) {
     const roll = d20();
     if (roll === 1) {
+      sfx('miss');
       floatText(this, tgt.x, tgt.y - 30, 'MISS', C.dim, 24);
       if (src.side === 'hero') {
         G.run.stats.nat1 += 1;
@@ -669,6 +680,7 @@ export default class BattleScene extends Phaser.Scene {
     const shown = dmg + absorbed;
     floatText(this, tgt.x + rng.int(-10, 10), tgt.y - 30, absorbed && !dmg ? `(${absorbed})` : `${crit ? '!' : ''}${shown}`, color, crit ? 36 : 28);
     // hit reaction
+    sfx(crit ? 'crit' : 'hit');
     tgt.spr.setTintFill(0xffffff);
     this.time.delayedCall(90, () => { if (tgt.alive) tgt.spr.clearTint(); });
     this.pose(tgt, 'recoil');
@@ -693,6 +705,7 @@ export default class BattleScene extends Phaser.Scene {
     u.hpBar.set(u.hp, u.max);
     if (u.side === 'hero') u.ref.hp = u.hp;
     floatText(this, u.x, u.y - 30, `+${got}`, C.green, 26);
+    if (!quiet) sfx('heal');
     this.sparkle(u, C.green);
     if (!quiet) this.log(`${u.name} recovers ${got} HP.`);
     this.refreshTags(u);
@@ -722,9 +735,11 @@ export default class BattleScene extends Phaser.Scene {
     if (u.side === 'hero') {
       u.ref.hp = 0;
       this.log(`${u.name}: "${pickLine(u.id, 'ko')}"`);
+      sfx('ko');
       this.koPose(u);
     } else {
       this.log(`${u.name} is defeated.`);
+      sfx('enemyDown');
       this.tweens.killTweensOf(u.spr);
       u.spr.anims.stop();
       u.spr.setTexture(frameKey(u.texKey, 'recoil'));
@@ -786,6 +801,8 @@ export default class BattleScene extends Phaser.Scene {
   // ------------------------------------------------------------------ end states
   victory() {
     this.over = true;
+    stopMusic();
+    sfx('victory');
     this.clearActions('');
     this.units.forEach((x) => x.ring.setVisible(false));
     // Everyone still standing does a little hop.
@@ -831,6 +848,7 @@ export default class BattleScene extends Phaser.Scene {
 
   defeat() {
     this.over = true;
+    stopMusic();
     this.clearActions('');
     this.time.delayedCall(700, () => this.goto('End', { result: 'lose' }));
   }
