@@ -1,0 +1,13 @@
+<meta charset="utf-8">
+<title>Sibling Rivalry</title>
+<style>
+  :root { color-scheme: dark; --ink: #0d0b13; --parch: #efe3c2; --dim: #9d93b0; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--ink); color: var(--parch); display: flex; align-items: center; justify-content: center; overflow: hidden; padding-inline: 0; }
+  #game { width: 100%; height: 100%; max-width: 100vw; display: flex; align-items: center; justify-content: center; }
+  #game canvas { image-rendering: pixelated; image-rendering: crisp-edges; outline: none; }
+  #boot { position: fixed; inset: 0; display: grid; place-items: center; font: 20px "VT323", monospace; color: var(--dim); pointer-events: none; }
+</style>
+<div id="game"></div>
+<div id="boot">Rolling for initiative...</div>
+<script type="module" src="./src/main.js"></script>
