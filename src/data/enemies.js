@@ -73,7 +73,39 @@ export const ENEMIES = {
     ],
   },
 
-  // ---------- Floor 3: The Thanksgiving Depths ----------
+  // ---------- Floor 3: Mount Snow ----------
+  liftYeti: {
+    short: 'Yeti', name: 'Lift Line Yeti', shape: 'golem', colors: { X: 0xe8eef5, L: 0x9fc3e8, D: 0xa8b4c4, E: 0x1a2438, M: 0x3a4a66 },
+    hp: 58, atk: 12, def: 6, spd: 4, xp: 19, gold: 15,
+    moves: [{ name: 'Cuts the Line', type: 'hit', mult: 1.1, w: 3 }, { name: 'Snowball Barrage', type: 'aoe', mult: 0.55, w: 1 }],
+  },
+  blackIce: {
+    short: 'Ice', name: 'Black Ice Slime', shape: 'blob', colors: { X: 0x2a3550, L: 0x9fc3e8, D: 0x161d2e, E: 0xd8f0ff, M: 0x0b1020 },
+    hp: 42, atk: 11, def: 5, spd: 6, xp: 16, gold: 13,
+    moves: [{ name: 'Freeze', type: 'hit', mult: 1, w: 3 }, { name: 'Slip', type: 'stun', mult: 0.5, chance: 0.4, w: 1 }],
+  },
+  mittenGhost: {
+    short: 'Mitten', name: 'Ghost of a Lost Mitten', shape: 'ghost', colors: { X: 0xd2463c, E: 0xffffff, M: 0xffffff },
+    hp: 36, atk: 12, def: 2, spd: 10, xp: 16, gold: 12,
+    moves: [{ name: 'Cold Hands', type: 'drain', mult: 1, w: 3 }, { name: 'Wind Chill', type: 'debuff', mult: 0.4, status: 'atkDown', turns: 2, w: 1 }],
+  },
+  skiPatrol: {
+    short: 'Patrol', name: 'Ski Patrol Goblin', shape: 'goblin', colors: { X: 0x7fae5a, R: 0xd2463c, W: 0xffffff, B: 0xd2463c, D: 0x2a2d38, K: 0x222222, E: 0x111111, M: 0x5a1e1e },
+    hp: 40, atk: 12, def: 4, spd: 9, xp: 17, gold: 13,
+    moves: [{ name: 'Pole Plant', type: 'hit', mult: 1, w: 3 }, { name: '"SLOW DOWN!"', type: 'stun', mult: 0.4, chance: 0.35, w: 1 }],
+  },
+  groomer: {
+    short: 'Groomer', name: 'The Snow Groomer', shape: 'snowcat', boss: true, scale: 1.5,
+    colors: { X: 0xe8843a, L: 0x9fc3e8, D: 0x9aa0a8, E: 0xfff2b0, K: 0x2a2d38, W: 0x6b6f78 },
+    hp: 170, atk: 13, def: 7, spd: 5, xp: 70, gold: 75,
+    moves: [
+      { name: 'Corduroy', type: 'hit', mult: 1.2, w: 3 },
+      { name: 'Plow Through', type: 'aoe', mult: 0.7, w: 2 },
+      { name: 'Revving Up...', type: 'charge', w: 1, release: { name: 'AVALANCHE', type: 'aoe', mult: 1.5 } },
+    ],
+  },
+
+  // ---------- Floor 4: The Thanksgiving Depths ----------
   casseroleOoze: {
     short: 'Ooze', name: 'Green Bean Casserole Ooze', shape: 'blob', colors: { X: 0x9bb05a, L: 0xe6d9a8, D: 0x5d6b30, E: 0x2a2a12, M: 0x2a2a12 },
     hp: 56, atk: 12, def: 5, spd: 5, xp: 20, gold: 16,
@@ -146,9 +178,18 @@ export const FLOORS = [
     bossIntro: 'The Quarterly Review blocks the stairwell. "Let\'s talk about your year."',
   },
   {
+    name: 'Mount Snow',
+    theme: 'snow',
+    sub: 'Floor 3 · Night skiing, somehow underground',
+    tint: 0x1e2a3a,
+    pool: ['liftYeti', 'blackIce', 'mittenGhost', 'skiPatrol'],
+    boss: ['groomer'],
+    bossIntro: 'Headlights cut through the snow. The Snow Groomer has been grooming this trail since 1998. It does not stop for siblings.',
+  },
+  {
     name: 'The Thanksgiving Depths',
     theme: 'dining',
-    sub: 'Floor 3 · Every relative, all at once',
+    sub: 'Floor 4 · Every relative, all at once',
     tint: 0x2e2218,
     pool: ['casseroleOoze', 'adviceImp', 'seatingWraith', 'dryTurkey'],
     boss: ['headTyping', 'headReplyAll', 'headMeme'],
@@ -156,7 +197,7 @@ export const FLOORS = [
   },
 ];
 
-// Floors past 3 cycle the pools with harder scaling ("Keep descending").
+// Floors past the last one cycle the pools with harder scaling ("Keep descending").
 export function floorDef(n) {
   const base = FLOORS[(n - 1) % FLOORS.length];
   if (n <= FLOORS.length) return base;

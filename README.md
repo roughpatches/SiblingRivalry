@@ -23,8 +23,8 @@ npm run build    # one self-contained dist/index.html (fonts and Phaser inlined)
   The button shows each sibling's odds before you commit.
 - **Loot**: gear has a weapon or trinket slot and random stats. Signature legendaries
   double their stats for the matching sibling (Jeter's gloves for Tom, the walnut bowl for Andrew...).
-- **Floors**: The Basement → The Corporate Catacombs → The Thanksgiving Depths
-  (boss: the Family Group Chat Hydra). After that you can keep descending.
+- **Floors**: The Basement → The Corporate Catacombs → Mount Snow (boss: the Snow Groomer)
+  → The Thanksgiving Depths (final boss: the Family Group Chat Hydra). After that you can keep descending.
 
 ## Where to change things
 

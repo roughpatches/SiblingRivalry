@@ -6,7 +6,7 @@ import { scenery, hasTorches } from '../ui/scenery.js';
 import * as fx from '../ui/fx.js';
 import { buildBaseTextures, heroKey, portraitKey, enemyTexture } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
-import { ENEMIES, floorDef } from '../data/enemies.js';
+import { ENEMIES, FLOORS, floorDef } from '../data/enemies.js';
 import { makeGear, makeConsumable, statLine } from '../data/items.js';
 import { G, heroStats, gainXp, addToBag, removeFromBag, pickLine } from '../systems/state.js';
 import { rng, d20 } from '../systems/rng.js';
@@ -84,7 +84,7 @@ export default class BattleScene extends Phaser.Scene {
       const n = firstFight ? 2 : rng() < (G.run.floor === 1 ? 0.45 : 0.65) ? 3 : 2;
       ids = Array.from({ length: n }, () => rng.pick(fd.pool));
     }
-    const loop = Math.floor((G.run.floor - 1) / 3);
+    const loop = Math.floor((G.run.floor - 1) / FLOORS.length);
     const sc = 1 + 0.6 * loop;
     const positions = ENEMY_POS[ids.length];
     const counts = {};
@@ -784,7 +784,7 @@ export default class BattleScene extends Phaser.Scene {
     if (downed.length) lines.push(`${downed.map((h) => h.name).join(' and ')} walk${downed.length === 1 ? 's' : ''} it off (back at 10% HP).`);
     if (lost) lines.push(`Bag full: ${lost} item(s) left behind.`);
 
-    const finalBoss = isBoss && floor === 3;
+    const finalBoss = isBoss && floor === FLOORS.length;
     this.time.delayedCall(700, () => this.resultPanel(isBoss ? 'BOSS DEFEATED' : 'VICTORY', lines.join('\n'), kept, C.gold, () => {
       if (finalBoss) this.goto('End', { result: 'win' });
       else this.goto('Map', { msg: isBoss ? 'The way down is open. Click the stairs when you are ready.' : 'Room cleared.', levelUps: ups });

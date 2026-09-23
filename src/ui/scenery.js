@@ -11,12 +11,13 @@ export function scenery(scene, theme) {
   const g = scene.add.graphics().setDepth(-6);
   if (theme === 'office') office(scene, g);
   else if (theme === 'dining') dining(scene, g);
+  else if (theme === 'snow') snow(scene, g);
   else basement(scene, g);
   return g;
 }
 
 // Whether the floor keeps the dungeon's wall torches.
-export const hasTorches = (theme) => theme !== 'office';
+export const hasTorches = (theme) => theme !== 'office' && theme !== 'snow';
 
 // ------------------------------------------------------------ The Basement
 function basement(scene, g) {
@@ -164,4 +165,81 @@ function dining(scene, g) {
     scene.tweens.add({ targets: [flame, halo], scaleY: { from: 0.85, to: 1.15 }, alpha: { from: 0.8, to: 1 }, duration: 220 + x, yoyo: true, repeat: -1 });
   });
   g.fillStyle(0x3a2414, 1).fillRect(330, 298, 50, 4);
+}
+
+// ------------------------------------------------------------ Mount Snow
+function snow(scene, g) {
+  // Night sky over the whole wall, fading lighter toward the horizon.
+  const bands = [0x0e1528, 0x121b33, 0x17223d, 0x1c2947, 0x223152];
+  bands.forEach((c, i) => g.fillStyle(c, 1).fillRect(0, i * 48, W, 48));
+  g.fillStyle(0x223152, 1).fillRect(0, 240, W, 60);
+  g.fillStyle(0xefe3c2, 0.9);
+  [[70, 40], [210, 70], [330, 30], [520, 55], [610, 22], [760, 48], [880, 30], [430, 90], [300, 110]].forEach(([x, y]) => g.fillRect(x, y, 2, 2));
+  g.fillStyle(0xefe3c2, 1).fillCircle(860, 70, 16);
+  g.fillStyle(0x0e1528, 1).fillCircle(853, 65, 14);
+
+  // Mountains: far range, then the near ridge with snowcaps.
+  g.fillStyle(0x2c3a5c, 1).fillTriangle(-40, 280, 160, 120, 360, 280).fillTriangle(260, 280, 470, 100, 700, 280).fillTriangle(600, 280, 820, 140, 1040, 280);
+  g.fillStyle(0xdfe8f2, 0.9).fillTriangle(130, 142, 160, 120, 190, 142).fillTriangle(440, 124, 470, 100, 500, 124).fillTriangle(790, 162, 820, 140, 850, 162);
+  g.fillStyle(0x3a4a70, 1).fillTriangle(-80, 320, 240, 200, 560, 320).fillTriangle(400, 320, 700, 190, 1020, 320);
+
+  // The slope itself, and snow on the ground strip.
+  g.fillStyle(0xc9d6e6, 1).fillRect(0, 300, W, 60);
+  g.fillStyle(0xb4c4d8, 1);
+  for (let x = 0; x < W; x += 16) g.fillRect(x, 318 + ((x * 7) % 9), 10, 1);
+  g.fillStyle(0xdfe8f2, 1).fillRect(0, FLOOR_Y, W, 40);
+  g.fillStyle(0xc9d6e6, 1);
+  for (let x = 0; x < W; x += 6) g.fillRect(x, FLOOR_Y + 12 + (x % 18 === 0 ? 8 : 0), 3, 1);
+
+  // Pines along the ridge (kept to the middle and far right).
+  const pine = (x, y, h) => {
+    g.fillStyle(0x1b3a2c, 1).fillTriangle(x - h * 0.35, y, x, y - h, x + h * 0.35, y);
+    g.fillStyle(0xdfe8f2, 0.85).fillTriangle(x - h * 0.12, y - h * 0.62, x, y - h, x + h * 0.12, y - h * 0.62);
+    g.fillStyle(0x3b2a1e, 1).fillRect(x - 2, y, 4, 6);
+  };
+  [[350, 300, 44], [372, 304, 30], [612, 302, 40], [636, 306, 28], [900, 300, 50], [930, 306, 34]].forEach(([x, y, h]) => pine(x, y, h));
+
+  // The ski house on Overlook Drive, windows lit.
+  g.fillStyle(0x5a3b22, 1).fillRect(440, 244, 84, 56);
+  g.fillStyle(0xdfe8f2, 1).fillTriangle(428, 248, 482, 206, 536, 248);
+  g.fillStyle(0x3b2a1e, 1).fillTriangle(436, 246, 482, 212, 528, 246);
+  g.fillStyle(0xf2b441, 1).fillRect(452, 258, 14, 12).fillRect(498, 258, 14, 12).fillRect(476, 276, 12, 24);
+  g.fillStyle(0x3b2a1e, 1).fillRect(504, 214, 8, 18);
+  scene.add.text(482, 302, 'OVERLOOK DR.', { ...T.label, fontSize: '9px', color: '#3a4a70' }).setOrigin(0.5, 0).setDepth(-5);
+  const smoke = scene.add.circle(508, 206, 5, 0xdfe8f2, 0.5).setDepth(-5);
+  scene.tweens.add({ targets: smoke, y: 180, alpha: 0, scale: 2, duration: 1800, repeat: -1 });
+
+  // Chairlift: a cable across the sky, two towers, chairs sliding along it.
+  g.lineStyle(1, 0x0b0f1a, 1).lineBetween(0, 150, W, 116);
+  [[400, 138], [596, 130]].forEach(([x, y]) => { g.fillStyle(0x0b0f1a, 1).fillRect(x - 2, y, 4, 300 - y).fillRect(x - 10, y, 20, 3); });
+  for (let i = 0; i < 4; i++) {
+    const chair = scene.add.container(0, 0, [
+      scene.add.rectangle(0, 0, 1, 14, 0x0b0f1a).setOrigin(0.5, 0),
+      scene.add.rectangle(0, 14, 16, 3, 0x0b0f1a),
+      scene.add.rectangle(-7, 10, 2, 6, 0x0b0f1a),
+    ]).setDepth(-5);
+    const place = (t) => chair.setPosition(t * W, 150 - 34 * t);
+    const state = { t: i / 4 };
+    place(state.t);
+    scene.tweens.add({ targets: state, t: state.t + 1, duration: 36000, repeat: -1, onUpdate: () => place(state.t % 1) });
+  }
+
+  // Falling snow, in front of the scenery but behind the fighters.
+  const flakes = Array.from({ length: 90 }, () => {
+    const big = Math.random() < 0.3;
+    return {
+      o: scene.add.rectangle(Math.random() * W, Math.random() * 400, big ? 3 : 2, big ? 3 : 2, 0xffffff, big ? 0.9 : 0.6).setDepth(-4),
+      vy: big ? 0.9 : 0.5, drift: Math.random() * Math.PI * 2,
+    };
+  });
+  const fall = (time, delta) => {
+    const k = delta / 16.7;
+    for (const f of flakes) {
+      f.o.y += f.vy * k;
+      f.o.x += Math.sin(time / 900 + f.drift) * 0.35 * k;
+      if (f.o.y > 400) { f.o.y = -4; f.o.x = Math.random() * W; }
+    }
+  };
+  scene.events.on('update', fall);
+  scene.events.once('shutdown', () => scene.events.off('update', fall));
 }
