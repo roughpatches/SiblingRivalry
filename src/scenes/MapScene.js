@@ -10,6 +10,7 @@ import { makeGear, makeConsumable, statLine, CONSUMABLES } from '../data/items.j
 import { G, heroStats, xpToNext, addToBag, healHero, pickLine, descend, alive } from '../systems/state.js';
 import { COLS, ROWS, updateVisibility } from '../systems/dungeon.js';
 import { rng } from '../systems/rng.js';
+import { saveRun } from '../systems/save.js';
 
 const MAP_X = 24, MAP_Y = 78, CELL_W = 82, CELL_H = 78, ROOM = 54;
 
@@ -191,6 +192,8 @@ export default class MapScene extends Phaser.Scene {
     });
     this.mapLayer.add(this.token);
     this.tweens.add({ targets: this.token, y: c.y - 3, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // The map redraws after every room result, purchase and level-up: a good moment to save.
+    saveRun();
   }
 
   // A few fading footprints along one step of the party's walk.

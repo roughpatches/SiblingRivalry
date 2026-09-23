@@ -5,6 +5,7 @@ import { backdrop } from '../ui/backdrop.js';
 import { buildBaseTextures, heroKey, idleAnim, CHARLIE } from '../art/sprites.js';
 import { HEROES } from '../data/heroes.js';
 import { newRun } from '../systems/state.js';
+import { savedRunInfo, loadRun } from '../systems/save.js';
 
 export default class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
@@ -38,10 +39,24 @@ export default class TitleScene extends Phaser.Scene {
       }
     });
 
-    const b = button(this, W / 2 - 120, 440 + 4, 240, 44, 'Enter the dungeon', () => this.start(), { fontSize: '26px' });
+    // With a saved run, offer Continue alongside a fresh start. Enter continues.
+    const saved = savedRunInfo();
+    let b;
+    if (saved) {
+      b = button(this, W / 2 - 250, 444, 240, 44, `Continue (floor ${saved.floor})`, () => this.resume(), { fontSize: '24px' });
+      button(this, W / 2 + 10, 444, 240, 44, 'New run', () => this.start(), { fontSize: '24px', color: C.dim }).setDepth(2);
+    } else {
+      b = button(this, W / 2 - 120, 444, 240, 44, 'Enter the dungeon', () => this.start(), { fontSize: '26px' });
+    }
     this.add.text(W / 2, 510, 'Click rooms to explore  ·  Turn-based fights  ·  d20 skill checks  ·  Press 1-5 for skills in battle', { ...T.small }).setOrigin(0.5);
-    this.input.keyboard?.once('keydown-ENTER', () => this.start());
+    this.input.keyboard?.once('keydown-ENTER', () => (saved ? this.resume() : this.start()));
     b.setDepth(2);
+  }
+
+  resume() {
+    if (!loadRun()) return this.start();
+    this.cameras.main.fadeOut(300, 0, 0, 0);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Map', { intro: true }));
   }
 
   start() {

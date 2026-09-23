@@ -9,6 +9,7 @@ export function rng() {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 rng.seed = (n) => { s = n >>> 0; };
+rng.state = () => s;
 rng.int = (a, b) => a + Math.floor(rng() * (b - a + 1));
 rng.pick = (arr) => arr[Math.floor(rng() * arr.length)];
 rng.shuffle = (arr) => {

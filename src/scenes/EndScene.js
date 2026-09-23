@@ -5,6 +5,7 @@ import { backdrop } from '../ui/backdrop.js';
 import { heroKey, frameKey } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
 import { G, newRun, descend, heroStats } from '../systems/state.js';
+import { clearSave } from '../systems/save.js';
 
 export default class EndScene extends Phaser.Scene {
   constructor() { super('End'); }
@@ -12,6 +13,8 @@ export default class EndScene extends Phaser.Scene {
 
   create() {
     const win = this.result === 'win';
+    // The run is over. "Keep descending" saves again as soon as the next map is drawn.
+    clearSave();
     backdrop(this, win ? 0x2e2a18 : 0x2a1820, { torches: [[80, 90], [W - 80, 90]] });
     this.cameras.main.fadeIn(400, 0, 0, 0);
     panel(this, 150, 40, W - 300, H - 80, { edge: win ? C.gold : C.red });
