@@ -14,7 +14,7 @@ export const EVENTS = [
     text: 'A troll blocks a rickety bridge. "Toll is 40 gold. Or convince me you\'re worth it."',
     lines: {
       tom: 'Tom explains, at length, why the troll\'s pricing model is inefficient. The troll looks hurt.',
-      andrew: 'Andrew notes the bridge lacks a posted fee schedule, which is arguably a notice problem.',
+      andrew: 'Andrew notes the bridge lacks a posted fee schedule, which is arguably a notice problem. Also a zoning problem.',
       chachi: 'Chachi opens with "Okay so have you ever seen How I Met Your Mother?"',
     },
     success: { text: 'The troll waves you through and tips you for the conversation.', gold: 35, xp: 10 },
@@ -87,7 +87,10 @@ export const EVENTS = [
   {
     id: 'spreadsheet', title: 'The Unbalanced Ledger', stat: 'math', dc: 13,
     text: 'An ancient ledger that is off by exactly $0.03. A spectral accountant weeps beside it.',
-    lines: { tom: 'Tom finds it in eleven seconds and then keeps going. He finds four more errors. The accountant weeps harder.' },
+    lines: {
+      tom: 'Tom finds it in eleven seconds and then keeps going. He finds four more errors. The accountant weeps harder.',
+      andrew: 'Andrew has vetted a state budget. This ledger is adorable.',
+    },
     success: { text: 'The ledger balances. The accountant pays a finder\'s fee.', gold: 40, xp: 12 },
     fail: { text: 'You make it worse. It is now off by $0.04. The accountant bites.', dmg: 10 },
   },
@@ -117,4 +120,5 @@ export const TRIVIA = [
   { q: 'Hemophilia A is a deficiency of which clotting factor?', a: ['Factor VIII', 'Factor IX', 'Factor VII', 'Factor XI'], correct: 0 },
   { q: 'The Tuck School of Business is part of which college?', a: ['Dartmouth', 'Cornell', 'Brown', 'Middlebury'], correct: 0 },
   { q: 'What is the name of MIT\'s business school?', a: ['Sloan', 'Booth', 'Kellogg', 'Ross'], correct: 0 },
+  { q: 'What is the official name of the Massachusetts state legislature?', a: ['The Great and General Court', 'The General Assembly', 'The Commonwealth Congress', 'The Bay State Legislature'], correct: 0 },
 ];
