@@ -51,7 +51,7 @@ export const EVENTS = [
   {
     id: 'library', title: 'The Library of Unread Nonfiction', stat: 'lore', dc: 12, bonus: { stephen: 2 },
     text: 'Floor-to-ceiling books, all 600+ pages, all "you really should read this."',
-    lines: { stephen: 'Stephen has read all of them. He has notes. He has opinions about the translations.', andrew: 'Andrew finds a treatise on 19th-century land law and forgets where he is.' },
+    lines: { stephen: 'Stephen has read all of them. He has notes. He has a theory about the fall of every empire in the room.', andrew: 'Andrew finds a treatise on 19th-century land law and forgets where he is.' },
     success: { text: 'Hidden inside a hollowed-out biography: treasure. The reader grows wiser (+1 to that stat, permanently).', loot: 0.15, xp: 12, permStat: true },
     fail: { text: 'Your chosen reader falls asleep on page 3. Time passes. Nothing else.', xp: 4 },
   },
@@ -124,7 +124,7 @@ export const EVENTS = [
   },
   {
     id: 'blackdiamond', title: 'The Black Diamond', stat: 'grit', dc: 13,
-    text: 'A frozen chute drops to the next landing. Somehow there are skis. Somehow this has become a race.',
+    text: 'A frozen chute drops to the next landing. It looks exactly like a trail at Mount Snow. Somehow there are skis. Somehow this has become a race.',
     lines: {
       tom: 'Tom announces he is the fastest skier in the family. He has announced this every year since 1999.',
       stephen: 'Stephen says nothing and is already at the bottom.',
@@ -166,6 +166,8 @@ export const TRIVIA = [
   { q: 'The Boston Marathon starts in which Massachusetts town?', a: ['Hopkinton', 'Framingham', 'Natick', 'Wellesley'], correct: 0 },
   { q: 'What is the Canadian two-dollar coin nicknamed?', a: ['Toonie', 'Loonie', 'Twoonie', 'Deuce'], correct: 0 },
   { q: 'Which Toronto landmark was the world\'s tallest freestanding structure for over 30 years?', a: ['CN Tower', 'First Canadian Place', 'Rogers Centre', 'Scotiabank Arena'], correct: 0 },
+  { q: 'Mount Snow ski resort is in which state?', a: ['Vermont', 'New Hampshire', 'Maine', 'New York'], correct: 0 },
+  { q: 'Who wrote "The Wealth of Nations" (1776)?', a: ['Adam Smith', 'David Ricardo', 'John Locke', 'Thomas Malthus'], correct: 0 },
   { q: 'Which Hawaiian volcano gets snow on its summit most winters?', a: ['Mauna Kea', 'Diamond Head', 'Kilauea', 'Koko Head'], correct: 0 },
   { q: 'What is the official name of the Massachusetts state legislature?', a: ['The Great and General Court', 'The General Assembly', 'The Commonwealth Congress', 'The Bay State Legislature'], correct: 0 },
 ];

@@ -20,7 +20,7 @@ export default class EndScene extends Phaser.Scene {
     this.add.text(W / 2, 80, title, { ...T.h1, fontSize: '32px', color: hex(win ? C.gold : C.red) }).setOrigin(0.5).setStroke('#000', 6);
     const sub = win
       ? 'The family group chat falls silent. For now. Somewhere, a phone buzzes: "Who wants to do Thanksgiving next year?"'
-      : 'Mom calls. Everyone has to come home for dinner. Nobody mentions the dungeon.';
+      : 'Tom calls Mom. Mom calls everyone home for dinner. Nobody mentions the dungeon.';
     this.add.text(W / 2, 128, sub, { ...T.body, align: 'center', wordWrap: { width: W - 360 } }).setOrigin(0.5, 0);
 
     const party = G.run.party;
