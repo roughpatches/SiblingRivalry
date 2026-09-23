@@ -18,6 +18,7 @@ export function newRun(seed = Math.floor(Math.random() * 1e9)) {
     seed, party, gold: 20, floor: 1,
     bag: [makeConsumable('potion'), makeConsumable('potion'), makeConsumable('trailMix')],
     stats: { fights: 0, checks: 0, checksWon: 0, nat20: 0, nat1: 0, loot: 0 },
+    banterSeen: [],
     log: [],
   };
   party.forEach((h) => (h.hp = heroStats(h).maxHp));
@@ -107,6 +108,12 @@ export function healHero(h, amt) {
   const before = h.hp;
   h.hp = Math.min(max, h.hp + Math.round(amt));
   return h.hp - before;
+}
+
+// Sibling exchanges already heard this run (older saves may not have the list yet).
+export function banterSeen() {
+  if (!G.run.banterSeen) G.run.banterSeen = [];
+  return G.run.banterSeen;
 }
 
 export function pickLine(heroId, kind) {

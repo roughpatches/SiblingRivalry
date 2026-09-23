@@ -38,6 +38,7 @@ npm run build    # one self-contained dist/index.html (fonts and Phaser inlined)
 | File | What's in it |
 | --- | --- |
 | `src/data/heroes.js` | The four siblings: stats, skills, passives, all their lines |
+| `src/data/banter.js` | Sibling-to-sibling exchanges at rest stops, fight starts and wins |
 | `src/data/enemies.js` | Monsters, bosses, and floor definitions |
 | `src/data/events.js` | Skill-check rooms and trivia questions |
 | `src/data/items.js` | Consumables, signature legendaries, random gear names |
