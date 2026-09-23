@@ -101,6 +101,27 @@ export const EVENTS = [
     success: { text: 'It was fine! Great, even. Everyone heals.', healAll: 0.4, xp: 6 },
     fail: { text: 'It was not fine.', dmg: 9 },
   },
+  {
+    id: 'border', title: 'The Border Crossing', stat: 'charm', dc: 12, bonus: { stephen: 2 },
+    text: 'A border guard in a very polite toque blocks the stairs. "Purpose of your visit? Anything to declare?"',
+    lines: {
+      stephen: 'Stephen says "sorry" twice before the guard finishes the question. He is waved through as a local.',
+      andrew: 'Andrew cites the relevant section of the customs code. From memory. The guard is impressed and a little scared.',
+      chachi: 'Chachi declares "one incredible story" and starts telling it.',
+    },
+    success: { text: 'The guard waves you through and hands everyone a double-double.', healAll: 0.2, xp: 10 },
+    fail: { text: 'Secondary inspection. Duty on the trail mix comes to 30 gold.', goldLoss: 30 },
+  },
+  {
+    id: 'boxes', title: 'The Moving Boxes', stat: 'grit', dc: 13, bonus: { tom: 2 },
+    text: 'A wall of cardboard boxes from five different moves, labeled in four different handwritings. One just says "MISC (IMPORTANT)."',
+    lines: {
+      tom: 'Tom has hauled these boxes across three states and one country. He knows which one has the good stuff.',
+      chachi: 'Chachi insists she helped with the first move. She was two.',
+    },
+    success: { text: 'Box 47 of 112: something that looks legendary, wrapped in a 1998 Ridgefield newspaper.', loot: 0.2, xp: 12 },
+    fail: { text: 'The "MISC (IMPORTANT)" box falls on someone. It was all cables.', dmg: 12 },
+  },
 ];
 
 // The Pub Trivia Sphinx asks a real question. Andrew's Trivia Night removes two wrong answers.
@@ -120,5 +141,8 @@ export const TRIVIA = [
   { q: 'Hemophilia A is a deficiency of which clotting factor?', a: ['Factor VIII', 'Factor IX', 'Factor VII', 'Factor XI'], correct: 0 },
   { q: 'The Tuck School of Business is part of which college?', a: ['Dartmouth', 'Cornell', 'Brown', 'Middlebury'], correct: 0 },
   { q: 'What is the name of MIT\'s business school?', a: ['Sloan', 'Booth', 'Kellogg', 'Ross'], correct: 0 },
+  { q: 'The Boston Marathon starts in which Massachusetts town?', a: ['Hopkinton', 'Framingham', 'Natick', 'Wellesley'], correct: 0 },
+  { q: 'What is the Canadian two-dollar coin nicknamed?', a: ['Toonie', 'Loonie', 'Twoonie', 'Deuce'], correct: 0 },
+  { q: 'Which Toronto landmark was the world\'s tallest freestanding structure for over 30 years?', a: ['CN Tower', 'First Canadian Place', 'Rogers Centre', 'Scotiabank Arena'], correct: 0 },
   { q: 'What is the official name of the Massachusetts state legislature?', a: ['The Great and General Court', 'The General Assembly', 'The Commonwealth Congress', 'The Bay State Legislature'], correct: 0 },
 ];

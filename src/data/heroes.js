@@ -1,6 +1,9 @@
 // The four siblings. Everything personal about the game lives in this file:
 // names, stats, skills, passives and banter. Edit freely.
 //
+// Ages: Tom 39, Stephen 37, Andrew 33, Chachi 31.
+// Family moves: Mt. Kisco, NY -> Hopkinton, MA -> Ridgefield, CT -> Toronto, ON -> Boston.
+//
 // Check stats (used by skill-check events, d20 + stat vs DC):
 //   math  – puzzles, numbers, locks, anything quantitative
 //   lore  – history, reading, trivia, inscriptions
@@ -34,6 +37,7 @@ export const HEROES = [
         "Let's align on a framework before we... okay, they're attacking.",
         "I've run a 180-person department. I can run three siblings.",
         "Before we commit, I'd like a few expert calls on this goblin.",
+        'Five moves and a border crossing. I have packed for worse than this.',
       ],
       victory: [
         'Per my analysis, we won.',
@@ -50,6 +54,7 @@ export const HEROES = [
         'Stephen, you look sad. Is it the Blue Jays? It is always the Blue Jays.',
         'At Wayfair I cut production time in half. This rest could be twelve minutes.',
         'Stephen, you went to Sloan too. Back me up on this framework.',
+        "I'm six years older than Andrew. I remember Mt. Kisco. You were all very small and very loud.",
       ],
       fumble: ['That was a rounding error.'],
     },
@@ -89,8 +94,9 @@ export const HEROES = [
         'Quiet reading time. Finally.',
         "Nobody's going to watch Arrested Development with me, are they.",
         'I could build a reimbursement model for this dungeon. Nobody would pay for it. Literally.',
+        'We lived in Toronto for seven years. The Blue Jays thing is not a phase.',
       ],
-      fumble: ["I've made a huge mistake."],
+      fumble: ["I've made a huge mistake.", 'Sorry. Seven years in Toronto. It is reflexive.'],
     },
   },
   {
@@ -130,6 +136,7 @@ export const HEROES = [
         'This rest stop is legally a "temporary structure." I checked.',
         'I did demo and framing one summer. This wall is not load-bearing. Probably.',
         'Before we descend, has anyone reviewed the First Amendment exposure of that sphinx?',
+        "Mt. Kisco, Hopkinton, Ridgefield, Toronto, Boston. I've been the new kid in scarier places than this.",
       ],
       fumble: ['Strike that from the record.'],
     },
@@ -154,7 +161,7 @@ export const HEROES = [
     ],
     look: 'chachi',
     lines: {
-      battle: ['Challenge accepted!', 'Suit up!', 'Mile one. Easy pace. Then we destroy them.', "Whatever you do, don't say it'll be easy.", "I've covered the whole Rocky Mountain territory. I can cover this room."],
+      battle: ['Challenge accepted!', 'Suit up!', 'Mile one. Easy pace. Then we destroy them.', "Whatever you do, don't say it'll be easy.", "I've covered the whole Rocky Mountain territory. I can cover this room.", 'Youngest, fastest, and I will be telling Mom.'],
       victory: ['Easy. That was a warm-up lap.', 'High five! Tom. Tom, it is a high five, put your hand up.', 'And that, kids, is how we cleared that room.', 'Territory: secured.'],
       lowHp: ["I've hit the wall. I've hit walls before.", 'Deep breaths. Trust me, lungs are literally my job.'],
       ko: ['Save me... a finisher medal...'],
@@ -165,6 +172,7 @@ export const HEROES = [
         'Tom. Yankees in six. Say it back.',
         "Altitude training in Denver is paying off. Why is everyone breathing so hard?",
         'Neuroscience degree, and I still cannot explain why Tom does this.',
+        'We lived in Hopkinton. Where the Boston Marathon starts. It was destiny.',
       ],
       fumble: ['Haaave you met my aim? Neither have I.'],
     },
