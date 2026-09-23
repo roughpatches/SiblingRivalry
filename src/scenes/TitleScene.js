@@ -6,12 +6,15 @@ import { buildBaseTextures, heroKey, idleAnim, CHARLIE } from '../art/sprites.js
 import { HEROES } from '../data/heroes.js';
 import { newRun } from '../systems/state.js';
 import { savedRunInfo, loadRun } from '../systems/save.js';
+import { music } from '../systems/sound.js';
 
 export default class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
 
   create() {
     buildBaseTextures(this);
+    if (!this.scene.isActive('Hud')) this.scene.launch('Hud');
+    music('title');
     backdrop(this, 0x2a2436, { torches: [[70, 90], [W - 70, 90]] });
 
     const title = this.add.text(W / 2, 74, 'SIBLING RIVALRY', { ...T.h1, fontSize: '52px' }).setOrigin(0.5).setStroke('#000000', 8);

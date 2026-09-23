@@ -1,4 +1,5 @@
 import { C, T, hex, FONT_BODY } from './theme.js';
+import { sfx } from '../systems/sound.js';
 
 // Bevelled stone panel.
 export function panel(scene, x, y, w, h, opts = {}) {
@@ -42,7 +43,7 @@ export function button(scene, x, y, w, h, label, onClick, opts = {}) {
   c.add(zone);
   zone.on('pointerover', () => { hover = true; draw(); if (opts.onHover) opts.onHover(true); });
   zone.on('pointerout', () => { hover = false; draw(); if (opts.onHover) opts.onHover(false); });
-  zone.on('pointerup', () => { if (enabled) onClick(); });
+  zone.on('pointerup', () => { if (enabled) { sfx('click'); onClick(); } });
   c.setEnabled = (v) => { enabled = v; draw(); return c; };
   c.setLabel = (s) => { txt.setText(s); return c; };
   c.w = w; c.h = h;

@@ -11,6 +11,7 @@ import { G, heroStats, xpToNext, addToBag, healHero, pickLine, descend, alive } 
 import { COLS, ROWS, updateVisibility } from '../systems/dungeon.js';
 import { rng } from '../systems/rng.js';
 import { saveRun } from '../systems/save.js';
+import { sfx, music } from '../systems/sound.js';
 
 const MAP_X = 24, MAP_Y = 78, CELL_W = 82, CELL_H = 78, ROOM = 54;
 
@@ -34,6 +35,7 @@ export default class MapScene extends Phaser.Scene {
     const run = G.run;
     const fd = floorDef(run.floor);
     backdrop(this, fd.tint, { torches: [[610, 40]] });
+    music(fd.theme || 'basement');
     this.tip = tooltip(this);
     this.busy = false;
     this.modalLayer = null;
@@ -253,7 +255,7 @@ export default class MapScene extends Phaser.Scene {
       targets: this.token,
       tweens: steps.map((p) => ({
         x: p.x, y: p.y, duration: 170, ease: 'Sine.easeInOut',
-        onStart: () => this.footprints(this.token.x, this.token.y, p.x, p.y),
+        onStart: () => { sfx('step'); this.footprints(this.token.x, this.token.y, p.x, p.y); },
       })),
       onComplete: () => {
         map.current = room.id;
@@ -326,6 +328,7 @@ export default class MapScene extends Phaser.Scene {
       return;
     }
     room.cleared = true;
+    sfx('coin');
     const gold = rng.int(10, 22) + G.run.floor * 8;
     G.run.gold += gold;
     const item = makeGear(G.run.floor, 0.1);
@@ -344,6 +347,7 @@ export default class MapScene extends Phaser.Scene {
 
   rest(room) {
     room.cleared = true;
+    sfx('heal');
     const lines = [];
     for (const h of G.run.party) {
       const max = heroStats(h).maxHp;
@@ -378,6 +382,7 @@ export default class MapScene extends Phaser.Scene {
         if (G.run.gold < row.price) return this.say('Not enough gold.');
         if (!addToBag(row.it)) return this.say('The bag is full.');
         G.run.gold -= row.price;
+        sfx('coin');
         room.stock.splice(room.stock.indexOf(row.it), 1);
         this.closeModal();
         this.drawParty();
@@ -397,6 +402,7 @@ export default class MapScene extends Phaser.Scene {
       buttons: [
         { label: 'Descend', onClick: () => {
           G.run.party.forEach((h) => { if (h.hp > 0) healHero(h, heroStats(h).maxHp * 0.25); });
+          sfx('stairs');
           descend();
           this.toScene('Map', { intro: true });
         } },
@@ -531,6 +537,7 @@ export default class MapScene extends Phaser.Scene {
   }
 
   showLevelUps(ups) {
+    sfx('levelUp');
     const names = [...new Set(ups.map((u) => u.hero.id))];
     const text = names.map((id) => {
       const h = G.run.party.find((p) => p.id === id);
