@@ -159,10 +159,14 @@ export const ENEMIES = {
 };
 
 // Difficulty knobs, tuned with scripts/balance.mjs. Enemy HP and ATK are the
-// base stats above times these; a lone boss also gets a second action each round.
+// base stats above times these, growing a little on each deeper floor; bosses
+// get extra HP, and a lone boss acts more than once per round.
 export const TUNING = {
-  enemyHp: 1.3,
-  enemyAtk: 1.4,
+  enemyHp: 1.45,
+  enemyAtk: 1.9,
+  hpPerFloor: 0.1,
+  atkPerFloor: 0.12,
+  bossHp: 1.2,
   soloBossActions: 2,
 };
 

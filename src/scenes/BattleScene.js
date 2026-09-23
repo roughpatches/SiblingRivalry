@@ -103,11 +103,14 @@ export default class BattleScene extends Phaser.Scene {
       const [x, y] = positions[i];
       counts[id] = (counts[id] || 0) + 1;
       const dup = ids.filter((k) => k === id).length > 1;
-      const hpMult = this.kind === 'mimic' ? 1.4 * (1 + 0.4 * (G.run.floor - 1)) : 1;
+      const deeper = Math.min(G.run.floor, FLOORS.length) - 1;
+      const hpMult = (this.kind === 'mimic' ? 1.4 * (1 + 0.4 * (G.run.floor - 1)) : 1)
+        * (1 + TUNING.hpPerFloor * deeper) * (def.boss ? TUNING.bossHp : 1);
+      const atkMult = 1 + TUNING.atkPerFloor * deeper;
       const u = {
         side: 'enemy', id, spec: def, name: dup ? `${def.name} ${'ABC'[counts[id] - 1]}` : def.name,
         hp: Math.round(def.hp * TUNING.enemyHp * sc * hpMult), max: Math.round(def.hp * TUNING.enemyHp * sc * hpMult),
-        atk: Math.round(def.atk * TUNING.enemyAtk * (1 + 0.35 * loop) * (this.kind === 'mimic' ? 1 + 0.2 * (G.run.floor - 1) : 1)),
+        atk: Math.round(def.atk * TUNING.enemyAtk * atkMult * (1 + 0.35 * loop) * (this.kind === 'mimic' ? 1 + 0.2 * (G.run.floor - 1) : 1)),
         def: def.def + loop * 2, spd: def.spd, crit: 0,
         xp: Math.round(def.xp * sc * (this.kind === 'mimic' ? 1.5 : 1)), gold: Math.round(def.gold * sc),
         statuses: {}, alive: true, x, y, boss: !!def.boss, shield: 0,
