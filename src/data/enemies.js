@@ -158,6 +158,14 @@ export const ENEMIES = {
   },
 };
 
+// Difficulty knobs, tuned with scripts/balance.mjs. Enemy HP and ATK are the
+// base stats above times these; a lone boss also gets a second action each round.
+export const TUNING = {
+  enemyHp: 1.3,
+  enemyAtk: 1.4,
+  soloBossActions: 2,
+};
+
 export const FLOORS = [
   {
     name: 'The Basement',
