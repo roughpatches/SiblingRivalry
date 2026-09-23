@@ -14,7 +14,7 @@ export const EVENTS = [
     text: 'A troll blocks a rickety bridge. "Toll is 40 gold. Or convince me you\'re worth it."',
     lines: {
       tom: 'Tom explains, at length, why the troll\'s pricing model is inefficient. The troll looks hurt.',
-      andrew: 'Andrew notes the bridge lacks a posted fee schedule, which is arguably a notice problem.',
+      andrew: 'Andrew notes the bridge lacks a posted fee schedule, which is arguably a notice problem. Also a zoning problem.',
       chachi: 'Chachi opens with "Okay so have you ever seen How I Met Your Mother?"',
     },
     success: { text: 'The troll waves you through and tips you for the conversation.', gold: 35, xp: 10 },
@@ -60,8 +60,9 @@ export const EVENTS = [
     text: 'A goblin in a quarter-zip vest offers you "a ground-floor opportunity." There is a pitch deck.',
     lines: {
       tom: 'Tom asks for the unit economics. The goblin does not have unit economics.',
-      stephen: 'Stephen quietly asks one question. The goblin sweats.',
+      stephen: 'Stephen quietly asks how the product gets reimbursed. The goblin sweats.',
       andrew: 'Andrew requests the term sheet and redlines it on the spot.',
+      chachi: 'Chachi pitches the goblin right back. By the end he has signed up for her territory.',
     },
     success: { text: 'You talk him into giving you the "sample product" for free.', loot: 0.15, xp: 10 },
     fail: { text: 'You leave having somehow invested. Synergy fee: 25 gold.', goldLoss: 25 },
@@ -86,14 +87,17 @@ export const EVENTS = [
   {
     id: 'spreadsheet', title: 'The Unbalanced Ledger', stat: 'math', dc: 13,
     text: 'An ancient ledger that is off by exactly $0.03. A spectral accountant weeps beside it.',
-    lines: { tom: 'Tom finds it in eleven seconds and then keeps going. He finds four more errors. The accountant weeps harder.' },
+    lines: {
+      tom: 'Tom finds it in eleven seconds and then keeps going. He finds four more errors. The accountant weeps harder.',
+      andrew: 'Andrew has vetted a state budget. This ledger is adorable.',
+    },
     success: { text: 'The ledger balances. The accountant pays a finder\'s fee.', gold: 40, xp: 12 },
     fail: { text: 'You make it worse. It is now off by $0.04. The accountant bites.', dmg: 10 },
   },
   {
     id: 'fountain', title: 'The Suspicious Fountain', stat: 'grit', dc: 10,
     text: 'A fountain of glowing liquid. A sign reads "PROBABLY FINE."',
-    lines: { stephen: 'Stephen checks for a USP seal. There is none.' },
+    lines: { stephen: 'Stephen checks for a USP seal. There is none. It is also out of network.', chachi: 'Chachi reads the label like a package insert. "Side effects include... glowing."' },
     success: { text: 'It was fine! Great, even. Everyone heals.', healAll: 0.4, xp: 6 },
     fail: { text: 'It was not fine.', dmg: 9 },
   },
@@ -113,4 +117,8 @@ export const TRIVIA = [
   { q: 'Which wood is traditionally used for a woodworker\'s mallet head because it\'s so dense?', a: ['Lignum vitae', 'Basswood', 'Balsa', 'White pine'], correct: 0 },
   { q: 'How many Super Bowls did Tom Brady win with the Patriots?', a: ['Six', 'Five', 'Seven', 'Four'], correct: 0 },
   { q: 'The Appalachian Trail runs from Georgia to which state?', a: ['Maine', 'Vermont', 'New Hampshire', 'New York'], correct: 0 },
+  { q: 'Hemophilia A is a deficiency of which clotting factor?', a: ['Factor VIII', 'Factor IX', 'Factor VII', 'Factor XI'], correct: 0 },
+  { q: 'The Tuck School of Business is part of which college?', a: ['Dartmouth', 'Cornell', 'Brown', 'Middlebury'], correct: 0 },
+  { q: 'What is the name of MIT\'s business school?', a: ['Sloan', 'Booth', 'Kellogg', 'Ross'], correct: 0 },
+  { q: 'What is the official name of the Massachusetts state legislature?', a: ['The Great and General Court', 'The General Assembly', 'The Commonwealth Congress', 'The Bay State Legislature'], correct: 0 },
 ];
