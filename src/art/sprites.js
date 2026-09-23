@@ -99,6 +99,25 @@ const HERO_MAPS = {
 };
 
 const ENEMY_MAPS = {
+  // A snow groomer, facing right (enemies are flipped to face the party).
+  snowcat: [
+    '................',
+    '................',
+    '................',
+    '................',
+    '.....XXXXXX.....',
+    '.....XLLLLX.....',
+    '.....XLLLLX.....',
+    '..XXXXXXXXXXX...',
+    '..XXXXXXXXXXE.DD',
+    '..XXXXXXXXXXX.DD',
+    '..XXXXXXXXXXX.DD',
+    '.KKKKKKKKKKKK.DD',
+    '.KWKWKWKWKWKK...',
+    '.KKKKKKKKKKKK...',
+    '................',
+    '................',
+  ],
   blob: [
     '................',
     '................',
