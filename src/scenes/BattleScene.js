@@ -412,7 +412,7 @@ export default class BattleScene extends Phaser.Scene {
         this.attack(u, target, 1, { verb: sk.name });
         break;
       case 'numbers':
-        this.log(`Tom runs the numbers on ${target.name}.`);
+        this.log(`Tom runs commercial due diligence on ${target.name}.`);
         await this.lunge(u, target);
         this.attack(u, target, 1.7, { ignoreDef: true, verb: sk.name });
         break;
