@@ -329,13 +329,57 @@ function paint(scene, key, rows, pal, scale) {
   tex.refresh();
 }
 
+// ------------------------------------------------------------ animation frames
+// Every fighter's frames are derived from its one pixel map, so new characters
+// animate for free. The bottom rows (feet, base) stay planted; everything above moves.
+const PLANTED = 3;
+const blankRow = (w) => '.'.repeat(w);
+
+// Upper body dips one pixel: the breathing half of the idle loop.
+function breathe(rows) {
+  const cut = rows.length - PLANTED;
+  return [blankRow(rows[0].length), ...rows.slice(0, cut - 1), ...rows.slice(cut)];
+}
+// Upper body shifts sideways by dx pixels (positive = toward the way the sprite faces).
+function lean(rows, dx) {
+  const cut = rows.length - PLANTED;
+  const shift = (r) => (dx > 0 ? '.'.repeat(dx) + r.slice(0, r.length - dx) : r.slice(-dx) + '.'.repeat(-dx));
+  return rows.map((r, i) => (i < cut ? shift(r) : r));
+}
+// Eyes closed: each eye pixel takes the color beside it (skin, glasses, fur...).
+function blink(rows) {
+  return rows.map((r) => r.replace(/E/g, (_, i) => (i > 0 && r[i - 1] !== 'E' ? r[i - 1] : '.')));
+}
+
+export const FRAMES = ['breath', 'lean', 'recoil', 'blink'];
+export const frameKey = (key, f) => `${key}-${f}`;
+export const idleAnim = (key) => `${key}-idle`;
+
+function paintAnimated(scene, key, rows, pal, scale) {
+  paint(scene, key, rows, pal, scale);
+  paint(scene, frameKey(key, 'breath'), breathe(rows), pal, scale);
+  paint(scene, frameKey(key, 'lean'), lean(rows, 1), pal, scale);
+  paint(scene, frameKey(key, 'recoil'), lean(rows, -1), pal, scale);
+  paint(scene, frameKey(key, 'blink'), blink(rows), pal, scale);
+  if (scene.anims.exists(idleAnim(key))) return;
+  // Per-frame durations do the timing; the high frame rate just keeps the base step tiny.
+  const f = (k, duration) => ({ key: k, duration });
+  scene.anims.create({
+    key: idleAnim(key), frameRate: 1000, repeat: -1,
+    frames: [
+      f(key, 520), f(frameKey(key, 'breath'), 520), f(key, 520), f(frameKey(key, 'breath'), 520),
+      f(key, 420), f(frameKey(key, 'blink'), 110), f(key, 300), f(frameKey(key, 'breath'), 520),
+    ],
+  });
+}
+
 export function heroKey(id) { return `hero-${id}`; }
 export function portraitKey(id) { return `portrait-${id}`; }
 export function iconKey(t) { return `icon-${t}`; }
 
 export function buildBaseTextures(scene) {
   for (const [id, { map, pal }] of Object.entries(HERO_MAPS)) {
-    paint(scene, heroKey(id), map, pal, 4);
+    paintAnimated(scene, heroKey(id), map, pal, 4);
     paint(scene, portraitKey(id), map.slice(0, 10), pal, 3);
   }
   for (const [k, rows] of Object.entries(ICONS)) paint(scene, iconKey(k), rows, ICON_PAL, 3);
@@ -362,6 +406,6 @@ export function enemyTexture(scene, id, def) {
   const pal = { ...def.colors };
   pal.E = pal.E ?? 0x111111; pal.M = pal.M ?? 0x331111; pal.W = pal.W ?? 0xffffff;
   pal.D = pal.D ?? 0x000000; pal.L = pal.L ?? 0xffffff; pal.K = pal.K ?? 0x222222;
-  paint(scene, key, ENEMY_MAPS[def.shape], pal, 5);
+  paintAnimated(scene, key, ENEMY_MAPS[def.shape], pal, 5);
   return key;
 }

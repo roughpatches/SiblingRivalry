@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { W, H, C, T, hex, RARITY } from '../ui/theme.js';
 import { panel, button, bar } from '../ui/widgets.js';
-import { heroKey, portraitKey } from '../art/sprites.js';
+import { heroKey, portraitKey, idleAnim } from '../art/sprites.js';
 import { HERO_BY_ID, BRONX_BOMBERS } from '../data/heroes.js';
 import { statLine, STAT_LABEL } from '../data/items.js';
 import { G, heroStats, xpToNext, equip, unequip, removeFromBag, healHero, BAG_SIZE } from '../systems/state.js';
@@ -72,7 +72,7 @@ export default class PartyScene extends Phaser.Scene {
     const d = HERO_BY_ID[h.id];
     const s = heroStats(h);
     const X = 200;
-    add(this.add.image(X + 40, 110, heroKey(h.id)).setScale(1));
+    add(this.add.sprite(X + 40, 110, heroKey(h.id)).setScale(1).play(idleAnim(heroKey(h.id))));
     add(this.add.text(X + 86, 66, d.name.toUpperCase(), { ...T.h2, fontSize: '20px' }));
     add(this.add.text(X + 86, 92, `${d.title} · Level ${h.level}`, { ...T.body, fontSize: '20px' }));
     const hb = bar(this, X + 86, 118, 250, 14, C.green); hb.set(h.hp, s.maxHp); add(hb.g); add(hb.label);

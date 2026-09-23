@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { W, H, C, T, hex } from '../ui/theme.js';
 import { panel, button } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
-import { heroKey } from '../art/sprites.js';
+import { heroKey, frameKey } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
 import { G, newRun, descend, heroStats } from '../systems/state.js';
 
@@ -27,7 +27,7 @@ export default class EndScene extends Phaser.Scene {
     party.forEach((h, i) => {
       const x = W / 2 - 180 + i * 120;
       const img = this.add.image(x, 250, heroKey(h.id));
-      if (!win) img.setAngle(-90).setTint(0x777788);
+      if (!win) img.setTexture(frameKey(heroKey(h.id), 'blink')).setAngle(-90).setTint(0x777788);
       else this.tweens.add({ targets: img, y: 238, duration: 300 + i * 60, yoyo: true, repeat: -1, ease: 'Quad.easeOut', delay: i * 90 });
       this.add.text(x, 296, `${HERO_BY_ID[h.id].name} · LV ${h.level}`, { ...T.body, fontSize: '19px' }).setOrigin(0.5);
     });
