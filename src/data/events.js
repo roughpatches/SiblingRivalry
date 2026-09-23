@@ -135,7 +135,7 @@ export const EVENTS = [
     fail: { text: 'Yard sale. Poles, skis and dignity everywhere.', dmg: 13 },
   },
   {
-    id: 'cat', title: 'The Cat in the Corridor', stat: 'charm', dc: 12, bonus: { andrew: 4 },
+    id: 'cat', title: 'The Cat in the Corridor', stat: 'charm', dc: 12, bonus: { andrew: 4 }, art: 'charlie',
     text: 'A cat sits in the middle of the corridor, staring. It looks a little like Charlie. It will not move.',
     lines: {
       andrew: 'Andrew is already on the floor. It is not Charlie. He does not care.',

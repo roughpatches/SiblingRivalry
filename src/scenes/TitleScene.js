@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { W, H, C, T, hex } from '../ui/theme.js';
 import { panel, button } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
-import { buildBaseTextures, heroKey } from '../art/sprites.js';
+import { buildBaseTextures, heroKey, CHARLIE } from '../art/sprites.js';
 import { HEROES } from '../data/heroes.js';
 import { newRun } from '../systems/state.js';
 
@@ -30,6 +30,12 @@ export default class TitleScene extends Phaser.Scene {
       this.add.text(x, y + 80, d.title, { ...T.small, align: 'center', wordWrap: { width: 150 } }).setOrigin(0.5, 0);
       s.on('pointerover', () => { info.setText(`${d.name}: ${d.blurb}`); s.setTint(0xfff3d0); });
       s.on('pointerout', () => { s.clearTint(); });
+      if (d.id === 'andrew') {
+        const cat = this.add.image(x + 56, y + 24, CHARLIE).setScale(0.8).setInteractive();
+        this.tweens.add({ targets: cat, scaleY: 0.77, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        cat.on('pointerover', () => { info.setText("Charlie: Andrew's cat. Not playable. Emotionally load-bearing."); cat.setTint(0xfff3d0); });
+        cat.on('pointerout', () => cat.clearTint());
+      }
     });
 
     const b = button(this, W / 2 - 120, 440 + 4, 240, 44, 'Enter the dungeon', () => this.start(), { fontSize: '26px' });

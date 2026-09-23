@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { W, H, C, T, hex, RARITY } from '../ui/theme.js';
 import { panel, button, bar, floatText, tooltip } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
+import { scenery, hasTorches } from '../ui/scenery.js';
+import * as fx from '../ui/fx.js';
 import { buildBaseTextures, heroKey, portraitKey, enemyTexture } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
 import { ENEMIES, floorDef } from '../data/enemies.js';
@@ -31,10 +33,11 @@ export default class BattleScene extends Phaser.Scene {
   create() {
     buildBaseTextures(this);
     const fd = floorDef(G.run.floor);
-    backdrop(this, fd.tint, { torches: [[40, 110], [W - 40, 110]] });
-    // floor
+    backdrop(this, fd.tint, { torches: hasTorches(fd.theme) ? [[40, 110], [W - 40, 110]] : false });
+    scenery(this, fd.theme);
+    // shade the floor strip so fighters' shadows read against it
     const fl = this.add.graphics().setDepth(-5);
-    fl.fillStyle(0x000000, 0.35).fillRect(0, 360, W, 40);
+    fl.fillStyle(0x000000, 0.2).fillRect(0, 360, W, 40);
     this.tip = tooltip(this);
     this.cameras.main.fadeIn(250, 0, 0, 0);
 
@@ -147,7 +150,7 @@ export default class BattleScene extends Phaser.Scene {
     this.turnLabel = this.add.text(24, 410, '', { ...T.h2, fontSize: '14px' });
     this.actionLayer = this.add.container(0, 0);
     this.orderLayer = this.add.container(0, 0);
-    this.roundText = this.add.text(W / 2, 12, '', { ...T.label, color: hex(C.dim) }).setOrigin(0.5, 0);
+    this.roundText = this.add.text(W / 2, 12, '', { ...T.label, color: hex(C.dim) }).setOrigin(0.5, 0).setStroke('#000', 4);
     this.input.keyboard?.on('keydown', (e) => {
       const n = parseInt(e.key, 10);
       if (n >= 1 && n <= 5 && this.hotkeys?.[n - 1]) this.hotkeys[n - 1]();
@@ -413,28 +416,34 @@ export default class BattleScene extends Phaser.Scene {
         break;
       case 'numbers':
         this.log(`Tom runs commercial due diligence on ${target.name}.`);
+        fx.numberStream(this, u, target);
+        await this.wait(300);
         await this.lunge(u, target);
         this.attack(u, target, 1.7, { ignoreDef: true, verb: sk.name });
         break;
       case 'matrix':
         this.log('Tom plots every enemy in "Low Value / High Effort." Their defenses crumble.');
         this.flashAll(E(), C.blue);
+        fx.matrix(this, E());
         E().forEach((e) => { this.addStatus(e, 'defDown', 3, 0.5); floatText(this, e.x, e.y - 40, 'DEF-', C.blue, 22); });
         break;
       case 'bulwark': {
         const amt = 10 + 2 * lvl;
         this.log(`Tom snaps together a LEGO wall. Everyone gets a ${amt} shield.`);
+        fx.legoWall(this, this.liveHeroes());
         this.liveHeroes().forEach((h) => { h.shield += amt; this.refreshTags(h); floatText(this, h.x, h.y - 40, `+${amt} SHLD`, C.gold, 20); });
         break;
       }
       case 'receipt': {
         const amt = Math.round(target.max * 0.4);
         this.log(`Stephen unfurls a four-foot receipt over ${target.name}.`);
+        fx.receipt(this, target);
         this.heal(target, amt);
         break;
       }
       case 'precedent': {
         this.log('Stephen begins: "So, the Peace of Westphalia..."');
+        fx.book(this, u);
         await this.wait(250);
         for (const e of E()) {
           const chance = e.boss ? 0.3 : 0.65;
@@ -445,6 +454,7 @@ export default class BattleScene extends Phaser.Scene {
       }
       case 'pharmacy':
         this.log('Stephen makes a pharmacy run. Everyone is patched up.');
+        fx.crosses(this, this.heroes());
         for (const h of this.heroes()) {
           if (!h.alive) this.revive(h, 0.2);
           else this.heal(h, Math.round(h.max * 0.25));
@@ -455,12 +465,14 @@ export default class BattleScene extends Phaser.Scene {
       case 'objection':
         this.log('Andrew: "OBJECTION!" Every enemy is now very focused on Andrew.');
         this.cameras.main.shake(120, 0.004);
+        fx.gavel(this, u, true);
         this.addStatus(u, 'taunt', 2);
         this.addStatus(u, 'defUp', 2, 0.6);
         floatText(this, u.x, u.y - 50, 'OBJECTION!', C.red, 28);
         break;
       case 'order':
         this.log(`Andrew raises a point of order against ${target.name}.`);
+        fx.gavel(this, target, false);
         await this.lunge(u, target);
         if (this.attack(u, target, 0.6, { verb: sk.name }) && target.alive) {
           if (!target.boss || rng() < 0.5) { this.addStatus(target, 'stun', 1); floatText(this, target.x, target.y - 60, 'STUNNED', C.gold, 20); }
@@ -469,6 +481,7 @@ export default class BattleScene extends Phaser.Scene {
         break;
       case 'amendment':
         this.log('Andrew inserts favorable language. Party ATK +35%.');
+        fx.amendment(this, this.liveHeroes());
         this.liveHeroes().forEach((h) => { this.addStatus(h, 'atkUp', 3, 0.35); floatText(this, h.x, h.y - 40, 'ATK+', C.orange, 20); });
         break;
       case 'kick': {
@@ -477,6 +490,7 @@ export default class BattleScene extends Phaser.Scene {
           const live = E();
           if (!live.length) break;
           const t = rng.pick(live);
+          fx.speedLines(this, u);
           await this.lunge(u, t, 120);
           this.attack(u, t, 0.7, { verb: 'Mile 26 Kick', quiet: true });
           await this.wait(120);
@@ -486,11 +500,13 @@ export default class BattleScene extends Phaser.Scene {
       case 'legendary':
         this.log('Chachi: "This is going to be legen... wait for it..."');
         this.addStatus(u, 'charging', 99);
+        fx.chargeAura(this, u);
         u.chargeTarget = target;
         floatText(this, u.x, u.y - 50, 'wait for it...', C.purple, 22);
         break;
       case 'suitup':
         this.log('Chachi: "SUIT UP!" Everyone is faster and hits harder.');
+        fx.suitUp(this, this.liveHeroes());
         this.liveHeroes().forEach((h) => { this.addStatus(h, 'spdUp', 3, 4); this.addStatus(h, 'atkUp', 3, 0.2); floatText(this, h.x, h.y - 40, 'SUITED UP', C.green, 18); });
         break;
     }
@@ -507,6 +523,7 @@ export default class BattleScene extends Phaser.Scene {
     this.log('Chachi: "...DARY! LEGENDARY!"');
     await this.lunge(u, t, 260);
     this.cameras.main.shake(220, 0.01);
+    fx.legendaryBurst(this, t);
     this.attack(u, t, 3.2, { verb: 'Legendary' });
     await this.wait(650);
     this.endTurn(u);

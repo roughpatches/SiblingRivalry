@@ -129,6 +129,7 @@ export const ENEMIES = {
 export const FLOORS = [
   {
     name: 'The Basement',
+    theme: 'basement',
     sub: 'Floor 1 · Beneath the family home',
     tint: 0x2a2436,
     pool: ['dustBunny', 'taxBox', 'soxGoblin', 'replyBat', 'leafBat'],
@@ -137,6 +138,7 @@ export const FLOORS = [
   },
   {
     name: 'The Corporate Catacombs',
+    theme: 'office',
     sub: 'Floor 2 · Where synergies go to die',
     tint: 0x1f2a2a,
     pool: ['managerSlime', 'spreadsheetGolem', 'synergySpecter', 'calendarImp'],
@@ -145,6 +147,7 @@ export const FLOORS = [
   },
   {
     name: 'The Thanksgiving Depths',
+    theme: 'dining',
     sub: 'Floor 3 · Every relative, all at once',
     tint: 0x2e2218,
     pool: ['casseroleOoze', 'adviceImp', 'seatingWraith', 'dryTurkey'],
