@@ -11,6 +11,7 @@ import { ENEMIES, FLOORS, floorDef } from '../data/enemies.js';
 import { makeGear, makeConsumable, statLine } from '../data/items.js';
 import { G, heroStats, gainXp, addToBag, removeFromBag, pickLine, banterSeen } from '../systems/state.js';
 import { pickBanter } from '../data/banter.js';
+import { perkMods, perksForSkill } from '../data/perks.js';
 import { rng, d20 } from '../systems/rng.js';
 
 const HERO_POS = [[262, 116], [184, 196], [262, 276], [184, 352]];
@@ -73,9 +74,10 @@ export default class BattleScene extends Phaser.Scene {
       const u = {
         side: 'hero', id: h.id, name: d.name, ref: h, def0: d,
         hp: h.hp, max: s.maxHp, atk: s.atk, def: s.def, spd: s.spd, crit: s.crit,
-        statuses: {}, cds: {}, alive: h.hp > 0, x, y, level: h.level, secondWind: false, shield: 0,
+        statuses: {}, cds: {}, alive: h.hp > 0, x, y, level: h.level, windsUsed: 0, shield: 0,
+        mods: perkMods(h),
       };
-      if (u.id === 'andrew' && u.alive) u.shield = 8 + 2 * h.level;
+      if (u.id === 'andrew' && u.alive) u.shield = 8 + 2 * h.level + (u.mods.buckler || 0);
       this.makeUnitVisual(u, heroKey(h.id), 1, false);
       if (!u.alive) this.koPose(u, true);
       this.units.push(u);
@@ -206,6 +208,9 @@ export default class BattleScene extends Phaser.Scene {
     return Math.max(0, d);
   }
   effSpd(u) { return u.spd + (u.statuses.spdUp?.val || 0); }
+  // A skill's cooldown after perks (never below 1).
+  skillCd(u, sk) { return Math.max(1, sk.cd - (u.mods?.[`cd_${sk.id}`] || 0)); }
+
   critOn(u) {
     let t = 20 - (u.crit || 0);
     if ((u.id === 'tom' || u.id === 'chachi') && this.units.filter((x) => (x.id === 'tom' || x.id === 'chachi') && x.alive).length === 2) t -= 1;
@@ -339,11 +344,12 @@ export default class BattleScene extends Phaser.Scene {
     skills.forEach((sk, i) => {
       const locked = u.level < sk.level;
       const cd = u.cds[sk.id] || 0;
-      const sub = locked ? `unlocks at LV ${sk.level}` : cd > 0 ? `ready in ${cd}` : sk.cd ? `cooldown ${sk.cd}` : 'no cooldown';
+      const sub = locked ? `unlocks at LV ${sk.level}` : cd > 0 ? `ready in ${cd}` : sk.cd ? `cooldown ${this.skillCd(u, sk)}` : 'no cooldown';
+      const upgrades = perksForSkill(u.ref, sk.id).map((p) => `Upgraded: ${p.name}. ${p.desc}`);
       const [x, y] = slots[i];
       const b = button(this, x, y, bw, bh, sk.name, () => this.chooseSkill(u, sk), {
         disabled: locked || cd > 0, sub, fontSize: '19px',
-        onHover: (on) => on ? this.tip.show(x, y - 70, `${sk.name}\n${sk.desc}`) : this.tip.hide(),
+        onHover: (on) => on ? this.tip.show(x, y - 70 - upgrades.length * 22, [`${sk.name}`, sk.desc, ...upgrades].join('\n')) : this.tip.hide(),
       });
       this.actionLayer.add(b);
       if (!locked && cd === 0) this.hotkeys[i] = () => this.chooseSkill(u, sk);
@@ -432,20 +438,21 @@ export default class BattleScene extends Phaser.Scene {
   // ------------------------------------------------------------------ hero actions
   async doSkill(u, sk, target) {
     this.clearActions(`${u.name.toUpperCase()}: ${sk.name.toUpperCase()}`);
-    if (sk.cd) u.cds[sk.id] = sk.cd;
+    if (sk.cd) u.cds[sk.id] = this.skillCd(u, sk);
+    const m = u.mods || {};
     const E = () => this.liveEnemies();
     const lvl = u.level;
     switch (sk.id) {
       case 'pivot': case 'footnote': case 'mallet': case 'pole':
         await this.lunge(u, target);
-        this.attack(u, target, 1, { verb: sk.name });
+        this.attack(u, target, 1 + (m.basic || 0), { verb: sk.name });
         break;
       case 'numbers':
         this.log(`Tom runs commercial due diligence on ${target.name}.`);
         fx.numberStream(this, u, target);
         await this.wait(300);
         await this.lunge(u, target);
-        this.attack(u, target, 1.7, { ignoreDef: true, verb: sk.name });
+        this.attack(u, target, 1.7 + (m.numbersMult || 0), { ignoreDef: true, verb: sk.name });
         break;
       case 'matrix':
         this.log('Tom plots every enemy in "Low Value / High Effort." Their defenses crumble.');
@@ -455,7 +462,7 @@ export default class BattleScene extends Phaser.Scene {
         E().forEach((e) => { this.addStatus(e, 'defDown', 3, 0.5); floatText(this, e.x, e.y - 40, 'DEF-', C.blue, 22); });
         break;
       case 'bulwark': {
-        const amt = 10 + 2 * lvl;
+        const amt = 10 + 2 * lvl + (m.bulwark || 0);
         this.log(`Tom snaps together a LEGO wall. Everyone gets a ${amt} shield.`);
         fx.legoWall(this, this.liveHeroes());
         sfx('buff');
@@ -463,7 +470,7 @@ export default class BattleScene extends Phaser.Scene {
         break;
       }
       case 'receipt': {
-        const amt = Math.round(target.max * 0.4);
+        const amt = Math.round(target.max * (0.4 + (m.receipt || 0)));
         this.log(`Stephen unfurls a four-foot receipt over ${target.name}.`);
         fx.receipt(this, target);
         this.heal(target, amt);
@@ -474,7 +481,7 @@ export default class BattleScene extends Phaser.Scene {
         fx.book(this, u);
         await this.wait(250);
         for (const e of E()) {
-          const chance = e.boss ? 0.3 : 0.65;
+          const chance = e.boss ? 0.3 + (m.sleep || 0) * 0.75 : 0.65 + (m.sleep || 0);
           if (rng() < chance) { this.addStatus(e, 'sleep', 2); floatText(this, e.x, e.y - 40, 'Zzz', C.blue, 26); }
           else floatText(this, e.x, e.y - 40, 'still awake', C.dim, 18);
         }
@@ -495,8 +502,8 @@ export default class BattleScene extends Phaser.Scene {
         this.cameras.main.shake(120, 0.004);
         fx.gavel(this, u, true);
         sfx('gavel');
-        this.addStatus(u, 'taunt', 2);
-        this.addStatus(u, 'defUp', 2, 0.6);
+        this.addStatus(u, 'taunt', 2 + (m.taunt || 0));
+        this.addStatus(u, 'defUp', 2 + (m.taunt || 0), 0.6);
         floatText(this, u.x, u.y - 50, 'OBJECTION!', C.red, 28);
         break;
       case 'order':
@@ -505,7 +512,7 @@ export default class BattleScene extends Phaser.Scene {
         sfx('gavel');
         await this.lunge(u, target);
         if (this.attack(u, target, 0.6, { verb: sk.name }) && target.alive) {
-          if (!target.boss || rng() < 0.5) { this.addStatus(target, 'stun', 1); floatText(this, target.x, target.y - 60, 'STUNNED', C.gold, 20); }
+          if (!target.boss || rng() < 0.5 + (m.bossStun || 0)) { this.addStatus(target, 'stun', 1); floatText(this, target.x, target.y - 60, 'STUNNED', C.gold, 20); }
           else this.log(`${target.name} ignores the point of order.`);
         }
         break;
@@ -513,11 +520,11 @@ export default class BattleScene extends Phaser.Scene {
         this.log('Andrew inserts favorable language. Party ATK +35%.');
         fx.amendment(this, this.liveHeroes());
         sfx('buff');
-        this.liveHeroes().forEach((h) => { this.addStatus(h, 'atkUp', 3, 0.35); floatText(this, h.x, h.y - 40, 'ATK+', C.orange, 20); });
+        this.liveHeroes().forEach((h) => { this.addStatus(h, 'atkUp', 3, 0.35 + (m.amend || 0)); floatText(this, h.x, h.y - 40, 'ATK+', C.orange, 20); });
         break;
       case 'kick': {
         this.log('Chachi hits her Mile 26 kick.');
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3 + (m.kickHits || 0); i++) {
           const live = E();
           if (!live.length) break;
           const t = rng.pick(live);
@@ -558,7 +565,7 @@ export default class BattleScene extends Phaser.Scene {
     this.cameras.main.shake(220, 0.01);
     fx.legendaryBurst(this, t);
     sfx('boom');
-    this.attack(u, t, 3.2, { verb: 'Legendary' });
+    this.attack(u, t, 3.2 + (u.mods?.legendary || 0), { verb: 'Legendary' });
     await this.wait(650);
     this.endTurn(u);
   }
@@ -686,8 +693,8 @@ export default class BattleScene extends Phaser.Scene {
     if (tgt.shield > 0) { absorbed = Math.min(tgt.shield, dmg); tgt.shield -= absorbed; dmg -= absorbed; }
     if (tgt.statuses.sleep && dmg > 0) delete tgt.statuses.sleep;
     tgt.hp -= dmg;
-    if (tgt.hp <= 0 && tgt.id === 'chachi' && tgt.side === 'hero' && !tgt.secondWind) {
-      tgt.secondWind = true;
+    if (tgt.hp <= 0 && tgt.id === 'chachi' && tgt.side === 'hero' && tgt.windsUsed < 1 + (tgt.mods?.secondWind || 0)) {
+      tgt.windsUsed += 1;
       tgt.hp = 1;
       this.time.delayedCall(300, () => { floatText(this, tgt.x, tgt.y - 70, 'SECOND WIND', C.green, 22); });
       this.log('Chachi hits the wall... and keeps running. (Second Wind)');

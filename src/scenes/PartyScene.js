@@ -3,6 +3,7 @@ import { W, H, C, T, hex, RARITY } from '../ui/theme.js';
 import { panel, button, bar, tapToInspect, isTouch } from '../ui/widgets.js';
 import { heroKey, portraitKey, idleAnim } from '../art/sprites.js';
 import { HERO_BY_ID, BRONX_BOMBERS } from '../data/heroes.js';
+import { perkById, perkMods } from '../data/perks.js';
 import { statLine, STAT_LABEL } from '../data/items.js';
 import { G, heroStats, xpToNext, equip, unequip, removeFromBag, healHero, BAG_SIZE } from '../systems/state.js';
 import { gearPrice } from './MapScene.js';
@@ -98,11 +99,18 @@ export default class PartyScene extends Phaser.Scene {
 
     // skills: name + cooldown; hover for the full description
     add(this.add.text(X + 4, 300, `SKILLS (${isTouch(this) ? 'tap' : 'hover'} for details)`, { ...T.label }));
+    // Perks picked from level 4 on: the label lists them on hover or tap.
+    const perks = (h.perks || []).map((id) => perkById(h.id, id)).filter(Boolean);
+    const mods = perkMods(h);
+    const pl = add(this.add.text(X + 360, 300, perks.length ? `PERKS: ${perks.length}` : 'PERKS AT LV 4', { ...T.label, color: hex(perks.length ? C.gold : C.dim) }).setOrigin(1, 0));
+    if (perks.length) {
+      tapToInspect(pl.setInteractive({ useHandCursor: true }), () => this.showTip(X + 20, 150, perks.map((p) => `${p.name}: ${p.desc}`).join('\n')), () => this.hideTip());
+    }
     d.skills.forEach((sk, i) => {
       const locked = h.level < sk.level;
       const y = 318 + i * 23;
       const t = add(this.add.text(X + 4, y, sk.name, { ...T.body, fontSize: '20px', color: hex(locked ? C.edge : C.parch) }));
-      add(this.add.text(X + 356, y + 2, locked ? `unlocks LV ${sk.level}` : sk.cd ? `cooldown ${sk.cd}` : 'basic', { ...T.small, fontSize: '17px', color: hex(locked ? C.edge : C.dim) }).setOrigin(1, 0));
+      add(this.add.text(X + 356, y + 2, locked ? `unlocks LV ${sk.level}` : sk.cd ? `cooldown ${Math.max(1, sk.cd - (mods[`cd_${sk.id}`] || 0))}` : 'basic', { ...T.small, fontSize: '17px', color: hex(locked ? C.edge : C.dim) }).setOrigin(1, 0));
       const z = add(this.add.zone(X, y, 360, 22).setOrigin(0).setInteractive());
       tapToInspect(z, () => this.showTip(X + 20, y + 26, sk.desc), () => this.hideTip());
     });

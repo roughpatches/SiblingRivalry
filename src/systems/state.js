@@ -3,6 +3,10 @@ import { HEROES, HERO_BY_ID } from '../data/heroes.js';
 import { makeConsumable } from '../data/items.js';
 import { rng } from './rng.js';
 import { generateFloor } from './dungeon.js';
+import { perkById } from '../data/perks.js';
+
+// From this level on, every level-up earns a perk choice.
+export const PERK_LEVEL = 4;
 
 export const BAG_SIZE = 16;
 export const xpToNext = (lvl) => 24 + lvl * 18;
@@ -38,6 +42,12 @@ export function heroStats(h) {
     math: d.checks.math, lore: d.checks.lore, charm: d.checks.charm, grit: d.checks.grit,
   };
   for (const [k, v] of Object.entries(h.perm)) s[k] = (s[k] || 0) + v;
+  for (const id of h.perks || []) {
+    for (const [k, v] of Object.entries(perkById(h.id, id)?.stats || {})) {
+      if (k === 'hp') s.maxHp += v;
+      else s[k] = (s[k] || 0) + v;
+    }
+  }
   for (const it of Object.values(h.equip)) {
     if (!it) continue;
     const mult = it.owner === h.id ? 2 : 1;
@@ -65,6 +75,7 @@ export function gainXp(amount) {
       h.level += 1;
       const after = heroStats(h).maxHp;
       if (h.hp > 0) h.hp = Math.min(after, h.hp + (after - before) + Math.round(after * 0.25));
+      if (h.level >= PERK_LEVEL) h.perkPicks = (h.perkPicks || 0) + 1;
       ups.push({ hero: h, level: h.level });
     }
   }

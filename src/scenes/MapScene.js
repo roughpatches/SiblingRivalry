@@ -9,6 +9,7 @@ import { mapFloor, fog } from '../ui/mapfloor.js';
 import { makeGear, makeConsumable, statLine, CONSUMABLES } from '../data/items.js';
 import { G, heroStats, xpToNext, addToBag, healHero, pickLine, descend, alive, banterSeen } from '../systems/state.js';
 import { pickBanter } from '../data/banter.js';
+import { perkById, rollOffer } from '../data/perks.js';
 import { COLS, ROWS, updateVisibility } from '../systems/dungeon.js';
 import { rng } from '../systems/rng.js';
 import { saveRun } from '../systems/save.js';
@@ -72,6 +73,7 @@ export default class MapScene extends Phaser.Scene {
       this.tweens.add({ targets: banner, alpha: 1, duration: 400, yoyo: true, hold: 900, onComplete: () => banner.destroy() });
     }
     if (this.incoming.levelUps?.length) this.showLevelUps(this.incoming.levelUps);
+    else this.nextPerk();
   }
 
   // ---------------------------------------------------------------- map
@@ -428,7 +430,7 @@ export default class MapScene extends Phaser.Scene {
   modal(o) {
     this.closeModal(true);
     this.busy = true;
-    this.modalButtons = o.buttons.map((b) => ({ ...b, onClick: () => { if (this.modalLayer?.used) return; if (this.modalLayer) this.modalLayer.used = true; b.onClick(); } }));
+    this.modalButtons = o.buttons.map((b) => ({ ...b, onClick: () => { if (!this.modalLayer || this.modalLayer.used) return; this.modalLayer.used = true; b.onClick(); } }));
     const layer = this.add.container(0, 0).setDepth(60);
     this.modalLayer = layer;
     const shade = this.add.rectangle(0, 0, W, H, 0x000000, 0.55).setOrigin(0).setInteractive();
@@ -473,11 +475,11 @@ export default class MapScene extends Phaser.Scene {
       content.push(f); y += f.height + 10;
     }
     y += 8;
-    const bw = 150, gap = 16;
+    const bw = o.buttonWidth ?? 150, gap = 16;
     const total = o.buttons.length * bw + (o.buttons.length - 1) * gap;
     o.buttons.forEach((bd, i) => {
       const once = () => { if (layer.used) return; layer.used = true; bd.onClick(); };
-      const b = button(this, (mw - total) / 2 + i * (bw + gap), y, bw, 42, bd.label, once, { color: o.danger && i === 0 ? C.red : C.gold });
+      const b = button(this, (mw - total) / 2 + i * (bw + gap), y, bw, 42, bd.label, once, { color: o.danger && i === 0 ? C.red : C.gold, fontSize: o.buttonFontSize });
       content.push(b);
     });
     y += 60;
@@ -556,6 +558,40 @@ export default class MapScene extends Phaser.Scene {
       const unlocked = HERO_BY_ID[id].skills.find((s) => s.level === h.level);
       return `${HERO_BY_ID[id].name} reached level ${h.level}.${unlocked ? ` New skill: ${unlocked.name}!` : ''}  "${pickLine(id, 'levelUp')}"`;
     }).join('\n');
-    this.modal({ title: 'LEVEL UP', body: text, buttons: [{ label: 'Nice', onClick: () => this.closeModal() }] });
+    this.modal({ title: 'LEVEL UP', body: text, buttons: [{ label: 'Nice', onClick: () => { this.closeModal(); this.nextPerk(); } }] });
+  }
+
+  // From level 4 on, each level-up earns a perk: offer two and keep one. The
+  // offer is saved with the run, so a refresh shows the same two choices.
+  nextPerk() {
+    const h = G.run.party.find((p) => (p.perkPicks || 0) > 0);
+    if (!h) return;
+    if (!h.perkOffer) { h.perkOffer = rollOffer(h, rng.pick); saveRun(); }
+    const name = HERO_BY_ID[h.id].name;
+    const offer = h.perkOffer.map((id) => perkById(h.id, id));
+    const extra = h.perkPicks > 1 ? ` (${h.perkPicks} to choose)` : '';
+    this.modal({
+      title: `${name.toUpperCase()}: CHOOSE A PERK`,
+      body: `${name} is level ${h.level}${extra}. Pick one; the other goes back in the pile.\n\n` + offer.map((p) => `${p.name}: ${p.desc}`).join('\n\n'),
+      pic: heroKey(h.id),
+      buttonWidth: offer.length > 1 ? 222 : 240,
+      buttonFontSize: '19px',
+      buttons: offer.map((p) => ({ label: p.name, onClick: () => this.takePerk(h, p) })),
+    });
+  }
+
+  takePerk(h, p) {
+    // Only a perk from the current offer, and only while a pick is owed.
+    if (!(h.perkPicks > 0) || !h.perkOffer?.includes(p.id)) return;
+    const before = heroStats(h).maxHp;
+    h.perks = [...(h.perks || []), p.id];
+    h.perkPicks -= 1;
+    h.perkOffer = null;
+    // Extra max HP arrives filled in.
+    if (h.hp > 0) h.hp += heroStats(h).maxHp - before;
+    sfx('buff');
+    this.closeModal(); // redraws the map and party panel, which also saves
+    this.say(`${HERO_BY_ID[h.id].name} took ${p.name}.`);
+    this.nextPerk();
   }
 }
