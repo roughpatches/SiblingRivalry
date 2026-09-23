@@ -9,7 +9,8 @@ import { buildBaseTextures, heroKey, portraitKey, enemyTexture, frameKey, idleAn
 import { HERO_BY_ID } from '../data/heroes.js';
 import { ENEMIES, FLOORS, floorDef } from '../data/enemies.js';
 import { makeGear, makeConsumable, statLine } from '../data/items.js';
-import { G, heroStats, gainXp, addToBag, removeFromBag, pickLine } from '../systems/state.js';
+import { G, heroStats, gainXp, addToBag, removeFromBag, pickLine, banterSeen } from '../systems/state.js';
+import { pickBanter } from '../data/banter.js';
 import { rng, d20 } from '../systems/rng.js';
 
 const HERO_POS = [[262, 116], [184, 196], [262, 276], [184, 352]];
@@ -47,8 +48,13 @@ export default class BattleScene extends Phaser.Scene {
     this.buildEnemies();
     this.buildUi();
 
-    const speaker = rng.pick(this.heroes().filter((u) => u.alive));
-    this.log(`${speaker.name}: "${pickLine(speaker.id, 'battle')}"`);
+    // Sometimes two siblings trade lines as the fight starts; otherwise one speaks.
+    const exchange = rng() < 0.3 ? this.banter('battle') : null;
+    if (exchange) exchange.forEach((l) => this.log(l));
+    else {
+      const speaker = rng.pick(this.heroes().filter((u) => u.alive));
+      this.log(`${speaker.name}: "${pickLine(speaker.id, 'battle')}"`);
+    }
     this.round = 0;
     this.time.delayedCall(450, () => this.startRound());
   }
@@ -772,6 +778,11 @@ export default class BattleScene extends Phaser.Scene {
 
   flashAll(list, color) { list.forEach((u) => this.sparkle(u, color)); }
 
+  // A sibling exchange for this moment among whoever is still standing, or null.
+  banter(when) {
+    return pickBanter(when, { standing: this.liveHeroes().map((h) => h.id), theme: floorDef(G.run.floor).theme, seen: banterSeen() });
+  }
+
   // Hold a single frame ('lean', 'recoil', 'blink') until resumeIdle.
   pose(u, frame) {
     if (!u.alive) return;
@@ -834,7 +845,8 @@ export default class BattleScene extends Phaser.Scene {
     if (room) room.cleared = true;
 
     const speaker = rng.pick(this.liveHeroes());
-    const lines = [`${speaker.name}: "${pickLine(speaker.id, 'victory')}"`, '', `+${xp} XP   +${gold} gold`];
+    const talk = (rng() < 0.35 && this.banter('victory')) || [`${speaker.name}: "${pickLine(speaker.id, 'victory')}"`];
+    const lines = [...talk, '', `+${xp} XP   +${gold} gold`];
     const downed = this.heroes().filter((h) => !h.alive);
     if (downed.length) lines.push(`${downed.map((h) => h.name).join(' and ')} walk${downed.length === 1 ? 's' : ''} it off (back at 10% HP).`);
     if (lost) lines.push(`Bag full: ${lost} item(s) left behind.`);

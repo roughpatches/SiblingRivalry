@@ -7,7 +7,8 @@ import { HERO_BY_ID } from '../data/heroes.js';
 import { FLOORS, floorDef } from '../data/enemies.js';
 import { mapFloor, fog } from '../ui/mapfloor.js';
 import { makeGear, makeConsumable, statLine, CONSUMABLES } from '../data/items.js';
-import { G, heroStats, xpToNext, addToBag, healHero, pickLine, descend, alive } from '../systems/state.js';
+import { G, heroStats, xpToNext, addToBag, healHero, pickLine, descend, alive, banterSeen } from '../systems/state.js';
+import { pickBanter } from '../data/banter.js';
 import { COLS, ROWS, updateVisibility } from '../systems/dungeon.js';
 import { rng } from '../systems/rng.js';
 import { saveRun } from '../systems/save.js';
@@ -354,8 +355,14 @@ export default class MapScene extends Phaser.Scene {
       if (h.hp <= 0) h.hp = Math.round(max * 0.3);
       else healHero(h, max * 0.4);
     }
-    const speakers = rng.shuffle(['tom', 'stephen', 'andrew', 'chachi']).slice(0, 2);
-    for (const id of speakers) lines.push(`${HERO_BY_ID[id].name}: "${pickLine(id, 'rest')}"`);
+    // Usually a sibling exchange; otherwise two siblings each say something.
+    const theme = floorDef(G.run.floor).theme;
+    const exchange = rng() < 0.7 ? pickBanter('rest', { standing: ['tom', 'stephen', 'andrew', 'chachi'], theme, seen: banterSeen() }) : null;
+    if (exchange) lines.push(...exchange);
+    else {
+      const speakers = rng.shuffle(['tom', 'stephen', 'andrew', 'chachi']).slice(0, 2);
+      for (const id of speakers) lines.push(`${HERO_BY_ID[id].name}: "${pickLine(id, 'rest')}"`);
+    }
     this.modal({
       title: 'REST STOP',
       body: 'A campfire someone else built. Everyone heals 40%. Anyone knocked out gets back up. Charlie is here. Nobody knows how.\n\n' + lines.join('\n'),

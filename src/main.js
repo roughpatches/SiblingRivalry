@@ -12,7 +12,8 @@ import HudScene from './scenes/HudScene.js';
 import { unlockAudio, soundDebug, music, sfx } from './systems/sound.js';
 import { G, descend } from './systems/state.js';
 
-// Console helpers for testing: __party(), __map(), __descend()
+// Console helpers for testing: __run(), __party(), __map(), __descend()
+window.__run = () => G.run;
 window.__party = () => G.run?.party;
 window.__map = () => G.run?.map;
 window.__descend = () => descend();
