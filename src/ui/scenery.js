@@ -141,7 +141,7 @@ function dining(scene, g) {
   g.fillStyle(0x3a2414, 1).fillRect(477, 104, 6, 108).fillRect(418, 155, 124, 6);
   g.fillStyle(0x8a2f2a, 1).fillRect(398, 92, 18, 136).fillRect(544, 92, 18, 136);
 
-  // the family portrait: four siblings, one cat
+  // the family portrait: four siblings, one tuxedo cat
   g.fillStyle(0xb88a3a, 1).fillRect(326, 124, 64, 50);
   g.fillStyle(0x2a2438, 1).fillRect(331, 129, 54, 40);
   [[0x1c2c5b, 339], [0x2a5bb8, 351], [0x6b4226, 363], [0xff6fa0, 375]].forEach(([hat, x]) => {
@@ -149,7 +149,8 @@ function dining(scene, g) {
     g.fillStyle(hat, 1).fillRect(x - 3, 143, 7, 3);
     g.fillStyle(0x444a5a, 1).fillRect(x - 3, 154, 7, 10);
   });
-  g.fillStyle(0x8a8f99, 1).fillRect(380, 160, 5, 4);
+  g.fillStyle(0x1c1c22, 1).fillRect(380, 160, 5, 4);
+  g.fillStyle(0xf4f4f4, 1).fillRect(381, 162, 2, 2);
 
   // sideboard with the pie and two candles
   g.fillStyle(0x3a2414, 1).fillRect(600, 262, 40, 98);
