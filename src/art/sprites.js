@@ -1,4 +1,5 @@
 // All art is pixel maps turned into textures at boot. No image files needed.
+import { PICTURES, PIC_PAL, normalized, picKey } from './pictures.js';
 // '.' is transparent; every other character looks up a color in the palette.
 
 const SKIN = 0xf0c8a0, SKIN_D = 0xd9a77e, EYE = 0x1d1a24, MOUTH = 0x9a4a44, SHOE = 0x1b1b22;
@@ -384,6 +385,7 @@ export function buildBaseTextures(scene) {
   }
   for (const [k, rows] of Object.entries(ICONS)) paint(scene, iconKey(k), rows, ICON_PAL, 3);
   paint(scene, CHARLIE, outlined(CHARLIE_MAP, 'O'), CHARLIE_PAL, 4);
+  for (const [id, rows] of Object.entries(PICTURES)) paint(scene, picKey(id), outlined(normalized(rows), 'O'), PIC_PAL, 4);
 
   // A soft shadow ellipse and a sparkle for effects
   if (!scene.textures.exists('shadow')) {
