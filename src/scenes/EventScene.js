@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { W, H, C, T, hex, RARITY, FONT_DISPLAY } from '../ui/theme.js';
 import { panel, button, floatText } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
-import { buildBaseTextures, heroKey, iconKey } from '../art/sprites.js';
+import { buildBaseTextures, heroKey, iconKey, idleAnim } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
 import { EVENTS, TRIVIA } from '../data/events.js';
 import { floorDef } from '../data/enemies.js';
@@ -89,7 +89,7 @@ export default class EventScene extends Phaser.Scene {
     const d = HERO_BY_ID[h.id];
     const mod = this.modFor(h);
     let y = this.header(ev.title, ev.lines?.[h.id] || `${d.name} steps up.`, 'event');
-    this.layer.add(this.add.image(PX + 110, y + 90, heroKey(h.id)).setScale(1.3));
+    this.layer.add(this.add.sprite(PX + 110, y + 90, heroKey(h.id)).setScale(1.3).play(idleAnim(heroKey(h.id))));
     const roll = d20();
     const dice = this.d20Graphic(PX + PW / 2, y + 90);
     await this.rollAnim(dice, roll);

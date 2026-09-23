@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { W, H, C, T, hex } from '../ui/theme.js';
 import { panel, button } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
-import { buildBaseTextures, heroKey, CHARLIE } from '../art/sprites.js';
+import { buildBaseTextures, heroKey, idleAnim, CHARLIE } from '../art/sprites.js';
 import { HEROES } from '../data/heroes.js';
 import { newRun } from '../systems/state.js';
 
@@ -24,8 +24,8 @@ export default class TitleScene extends Phaser.Scene {
     HEROES.forEach((d, i) => {
       const x = x0 + i * spacing, y = 270;
       this.add.image(x, y + 38, 'shadow').setScale(1.1);
-      const s = this.add.image(x, y, heroKey(d.id)).setScale(1.25).setInteractive({ useHandCursor: false });
-      this.tweens.add({ targets: s, y: y - 5, duration: 700 + i * 90, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: i * 120 });
+      const s = this.add.sprite(x, y, heroKey(d.id)).setScale(1.25).setInteractive({ useHandCursor: false });
+      s.play({ key: idleAnim(heroKey(d.id)), startFrame: i * 2 });
       this.add.text(x, y + 60, d.name.toUpperCase(), { ...T.h2, fontSize: '16px' }).setOrigin(0.5);
       this.add.text(x, y + 80, d.title, { ...T.small, align: 'center', wordWrap: { width: 150 } }).setOrigin(0.5, 0);
       s.on('pointerover', () => { info.setText(`${d.name}: ${d.blurb}`); s.setTint(0xfff3d0); });

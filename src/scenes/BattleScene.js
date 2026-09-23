@@ -4,7 +4,7 @@ import { panel, button, bar, floatText, tooltip } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
 import { scenery, hasTorches } from '../ui/scenery.js';
 import * as fx from '../ui/fx.js';
-import { buildBaseTextures, heroKey, portraitKey, enemyTexture } from '../art/sprites.js';
+import { buildBaseTextures, heroKey, portraitKey, enemyTexture, frameKey, idleAnim } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
 import { ENEMIES, FLOORS, floorDef } from '../data/enemies.js';
 import { makeGear, makeConsumable, statLine } from '../data/items.js';
@@ -109,9 +109,14 @@ export default class BattleScene extends Phaser.Scene {
 
   makeUnitVisual(u, key, scale, flip) {
     const shadow = this.add.image(u.x, u.y + 40 * scale, 'shadow').setScale(scale);
-    const spr = this.add.image(u.x, u.y, key).setScale(scale).setFlipX(flip);
-    u.spr = spr; u.shadow = shadow; u.baseY = u.y;
-    this.tweens.add({ targets: spr, y: u.y - 3, duration: 650 + rng.int(0, 300), yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const spr = this.add.sprite(u.x, u.y, key).setScale(scale).setFlipX(flip);
+    u.spr = spr; u.shadow = shadow; u.baseY = u.y; u.texKey = key;
+    // Idle loop (breathing and blinking), started at a random point so nobody moves in unison.
+    spr.play({ key: idleAnim(key), startFrame: rng.int(0, 7) });
+    // Things with wings or no legs also hover.
+    if (['bat', 'ghost'].includes(u.spec?.shape)) {
+      this.tweens.add({ targets: spr, y: u.y - 4, duration: 650 + rng.int(0, 300), yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
     if (u.side === 'hero') {
       // Heroes stack tightly, so their labels sit to the left of the sprite.
       const lx = u.x - 40;
@@ -199,6 +204,10 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   refreshTags(u) {
+    if (u.alive && u.spr) {
+      if (u.statuses.sleep) this.resumeIdle(u);
+      else if (u.spr.texture.key === frameKey(u.texKey, 'blink') && !u.spr.anims.isPlaying) this.resumeIdle(u);
+    }
     const parts = Object.keys(u.statuses).map((k) => STATUS_TAG[k]?.[0]).filter(Boolean);
     if (u.shield > 0) parts.unshift(`SHLD ${u.shield}`);
     if (u.id === 'tom' && u.alive && u.hp < u.max / 2) parts.push('SPIRALING');
@@ -662,6 +671,8 @@ export default class BattleScene extends Phaser.Scene {
     // hit reaction
     tgt.spr.setTintFill(0xffffff);
     this.time.delayedCall(90, () => { if (tgt.alive) tgt.spr.clearTint(); });
+    this.pose(tgt, 'recoil');
+    this.time.delayedCall(220, () => this.resumeIdle(tgt));
     this.tweens.add({ targets: tgt.spr, x: tgt.x + (tgt.side === 'hero' ? -8 : 8), duration: 60, yoyo: true, repeat: 1 });
     tgt.hpBar.set(tgt.hp, tgt.max);
     if (tgt.side === 'hero') tgt.ref.hp = Math.max(0, tgt.hp);
@@ -694,6 +705,7 @@ export default class BattleScene extends Phaser.Scene {
     u.ref.hp = u.hp;
     u.spr.setAngle(0).clearTint().setAlpha(1);
     u.spr.y = u.baseY;
+    this.resumeIdle(u);
     u.hpBar.set(u.hp, u.max);
     u.nameText.setAlpha(1);
     floatText(this, u.x, u.y - 40, 'BACK UP', C.green, 24);
@@ -714,6 +726,8 @@ export default class BattleScene extends Phaser.Scene {
     } else {
       this.log(`${u.name} is defeated.`);
       this.tweens.killTweensOf(u.spr);
+      u.spr.anims.stop();
+      u.spr.setTexture(frameKey(u.texKey, 'recoil'));
       this.tweens.add({ targets: [u.spr, u.shadow, u.tags], alpha: 0, y: '+=20', duration: 500 });
       this.tweens.add({ targets: [u.nameText, u.hpBar.g, u.hpBar.label], alpha: 0.25, duration: 400 });
       this.sparkle(u, C.red);
@@ -724,6 +738,8 @@ export default class BattleScene extends Phaser.Scene {
 
   koPose(u, instant) {
     this.tweens.killTweensOf(u.spr);
+    u.spr.anims.stop();
+    u.spr.setTexture(frameKey(u.texKey, 'blink'));
     const apply = { angle: -90, y: u.baseY + 20 };
     if (instant) { u.spr.setAngle(-90).setY(u.baseY + 20); }
     else this.tweens.add({ targets: u.spr, ...apply, duration: 300 });
@@ -741,11 +757,29 @@ export default class BattleScene extends Phaser.Scene {
 
   flashAll(list, color) { list.forEach((u) => this.sparkle(u, color)); }
 
+  // Hold a single frame ('lean', 'recoil', 'blink') until resumeIdle.
+  pose(u, frame) {
+    if (!u.alive) return;
+    u.spr.anims.stop();
+    u.spr.setTexture(frameKey(u.texKey, frame));
+  }
+
+  // Back to the idle loop, or eyes shut while asleep. Knocked-out units stay put.
+  resumeIdle(u) {
+    if (!u.alive) return;
+    if (u.statuses.sleep) { u.spr.anims.stop(); u.spr.setTexture(frameKey(u.texKey, 'blink')); return; }
+    if (!u.spr.anims.isPlaying) u.spr.play({ key: idleAnim(u.texKey), startFrame: rng.int(0, 7) });
+  }
+
   lunge(u, target, dur = 150) {
     return new Promise((res) => {
       const dir = u.side === 'hero' ? 1 : -1;
       const dx = target ? Math.min(60, Math.abs(target.x - u.x) * 0.25) : 30;
-      this.tweens.add({ targets: u.spr, x: u.x + dir * dx, duration: dur, yoyo: true, ease: 'Quad.easeOut', onYoyo: () => res(), onComplete: () => u.spr.setX(u.x) });
+      this.pose(u, 'lean');
+      this.tweens.add({
+        targets: u.spr, x: u.x + dir * dx, duration: dur, yoyo: true, ease: 'Quad.easeOut',
+        onYoyo: () => res(), onComplete: () => { u.spr.setX(u.x); this.resumeIdle(u); },
+      });
     });
   }
 
@@ -754,6 +788,10 @@ export default class BattleScene extends Phaser.Scene {
     this.over = true;
     this.clearActions('');
     this.units.forEach((x) => x.ring.setVisible(false));
+    // Everyone still standing does a little hop.
+    this.liveHeroes().forEach((h, i) => {
+      this.tweens.add({ targets: h.spr, y: h.baseY - 18, duration: 160, yoyo: true, repeat: 1, delay: 120 + i * 90, ease: 'Quad.easeOut' });
+    });
     G.run.stats.fights += 1;
     const xp = this.enemies().reduce((a, e) => a + e.xp, 0);
     const gold = this.enemies().reduce((a, e) => a + e.gold, 0) + rng.int(0, 6);
