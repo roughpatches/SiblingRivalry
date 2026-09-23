@@ -14,9 +14,10 @@ export const UNIQUES = [
   { name: "Derek Jeter's Batting Gloves", slot: 'weapon', owner: 'tom', stats: { atk: 5, crit: 1 }, desc: 'Still smells like 1996.' },
   { name: 'UCS LEGO Millennium Falcon', slot: 'trinket', owner: 'tom', stats: { def: 3, math: 2, hp: 10 }, desc: '7,541 pieces. Tom counted.' },
   { name: 'Doorstop History Tome (Annotated)', slot: 'weapon', owner: 'stephen', stats: { atk: 4, lore: 2 }, desc: '1,100 pages. Hits like it.' },
-  { name: 'Arrested Development Box Set', slot: 'trinket', owner: 'stephen', stats: { hp: 20, lore: 1, def: 2 }, desc: "There's always money in it." },
+  { name: 'The Wealth of Nations (1776, Annotated)', slot: 'trinket', owner: 'stephen', stats: { hp: 20, lore: 1, def: 2 }, desc: 'The invisible hand also blocks.' },
   { name: 'Carver\'s Mallet of Due Process', slot: 'weapon', owner: 'andrew', stats: { atk: 4, def: 2 }, desc: 'Lignum vitae head. Procedurally sound.' },
   { name: 'Hand-Turned Walnut Bowl', slot: 'trinket', owner: 'andrew', stats: { hp: 20, def: 3 }, desc: 'Food-safe finish. Also a shield.' },
+  { name: 'Wallet Photo of Charlie the Cat', slot: 'trinket', owner: 'andrew', stats: { hp: 10, charm: 2, def: 2 }, desc: 'One of four hundred. Andrew will show you the rest.' },
   { name: 'The Yellow Umbrella', slot: 'weapon', owner: 'chachi', stats: { atk: 5, spd: 2 }, desc: 'It means something. It\'s a long story.' },
   { name: '26.2 Finisher Medal', slot: 'trinket', owner: 'chachi', stats: { spd: 3, grit: 2, hp: 10 }, desc: 'Earned, not given. Worn to brunch anyway.' },
 ];

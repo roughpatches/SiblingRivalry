@@ -25,6 +25,11 @@ export const ENEMIES = {
     hp: 18, atk: 7, def: 1, spd: 11, xp: 7, gold: 5,
     moves: [{ name: 'Bite', type: 'hit', mult: 1, w: 2 }, { name: 'Reply All', type: 'aoe', mult: 0.55, w: 2 }],
   },
+  leafBat: {
+    short: 'Bat?', name: 'Probably a Bat (Leaves)', shape: 'bat', colors: { X: 0x6b8a3a, E: 0xc9a14a, M: 0x3b2a14 },
+    hp: 16, atk: 6, def: 1, spd: 10, xp: 7, gold: 5,
+    moves: [{ name: 'Rustle Menacingly', type: 'hit', mult: 1, w: 3 }, { name: '"BATS!"', type: 'debuff', mult: 0.4, status: 'atkDown', turns: 2, w: 1 }],
+  },
   laundryGolem: {
     short: 'Laundry', name: 'The Unfolded Laundry Golem', shape: 'golem', boss: true, scale: 1.5,
     colors: { X: 0xd7d2c4, L: 0x7aa7d6, D: 0x8c8676, E: 0x222222, M: 0x553333 },
@@ -126,7 +131,7 @@ export const FLOORS = [
     name: 'The Basement',
     sub: 'Floor 1 · Beneath the family home',
     tint: 0x2a2436,
-    pool: ['dustBunny', 'taxBox', 'soxGoblin', 'replyBat'],
+    pool: ['dustBunny', 'taxBox', 'soxGoblin', 'replyBat', 'leafBat'],
     boss: ['laundryGolem'],
     bossIntro: 'A mountain of unfolded laundry rises from the dryer. It has been waiting since 2011.',
   },

@@ -1,6 +1,10 @@
 // The four siblings. Everything personal about the game lives in this file:
 // names, stats, skills, passives and banter. Edit freely.
 //
+// Ages: Tom 39, Stephen 37, Andrew 33, Chachi 31.
+// Family moves: Mt. Kisco, NY -> Hopkinton, MA -> Ridgefield, CT -> Toronto, ON -> Boston.
+// Ski house at Mount Snow, VT: Queen Anne's Way -> Trail View -> Overlook Drive.
+//
 // Check stats (used by skill-check events, d20 + stat vs DC):
 //   math  – puzzles, numbers, locks, anything quantitative
 //   lore  – history, reading, trivia, inscriptions
@@ -34,14 +38,18 @@ export const HEROES = [
         "Let's align on a framework before we... okay, they're attacking.",
         "I've run a 180-person department. I can run three siblings.",
         "Before we commit, I'd like a few expert calls on this goblin.",
+        'Five moves and a border crossing. I have packed for worse than this.',
+        'BATS! BATS IN THE TREES! ...Okay. Leaves. But stay alert.',
+        'MOM! MOOOM! ...Sorry. Reflex.',
       ],
       victory: [
         'Per my analysis, we won.',
         'Exactly as I predicted, in the version of the model I did not share.',
         'Great work, team. Does anyone want feedback? I have feedback.',
         "Deal's done. I'll circulate the red-flag memo.",
+        'Hang on, calling Mom to tell her we won.',
       ],
-      lowHp: ['This is fine. This is statistically fine.', 'I would like to formally escalate.'],
+      lowHp: ['This is fine. This is statistically fine.', 'I would like to formally escalate.', 'I am calling Mom.'],
       ko: ['Tell the Yankees... I believed...'],
       levelUp: ["Level up. I'd like that in writing."],
       rest: [
@@ -50,6 +58,10 @@ export const HEROES = [
         'Stephen, you look sad. Is it the Blue Jays? It is always the Blue Jays.',
         'At Wayfair I cut production time in half. This rest could be twelve minutes.',
         'Stephen, you went to Sloan too. Back me up on this framework.',
+        "I'm six years older than Andrew. I remember Mt. Kisco. You were all very small and very loud.",
+        'For the record, I am the fastest skier in this family. I have the data.',
+        "Mom? MOM. Can you hear me? We're in a dungeon. No, it's fine. MOM.",
+        'Trail View had the best mudroom of the three ski houses. I will not be taking questions.',
       ],
       fumble: ['That was a rounding error.'],
     },
@@ -80,17 +92,21 @@ export const HEROES = [
         'I read a book about this. It did not end well for them.',
         'Give me a minute. I wrote a Python script for this.',
       ],
-      victory: ['Heh. Nice.', 'That was a lot like Agincourt. Nobody asked, I know.', 'Can I go back to my book now?', 'Margin on that fight: positive.'],
+      victory: ['Heh. Nice.', 'That was a lot like the repeal of the Corn Laws. Nobody asked, I know.', 'Can I go back to my book now?', 'Margin on that fight: positive.'],
       lowHp: ["I'd like to go home and read now."],
       ko: ['I had... one more chapter...'],
       levelUp: ['Oh. Neat.', 'Oh. Neat. Adding that to the model.'],
       rest: [
         "Did you know the Blue Jays won back-to-back in '92 and '93? Anyway.",
         'Quiet reading time. Finally.',
-        "Nobody's going to watch Arrested Development with me, are they.",
+        "Nobody wants to talk Keynes versus Hayek with me, do they.",
+        'Quick thought on the political economy of this dungeon. Seventeen quick thoughts, actually.',
         'I could build a reimbursement model for this dungeon. Nobody would pay for it. Literally.',
+        'We lived in Toronto for seven years. The Blue Jays thing is not a phase.',
+        'Remember when Tom sprinted down the sidewalk screaming BATS? They were leaves.',
+        'Fastest skier? I don\'t need to argue about it. I just quietly get to the lift first.',
       ],
-      fumble: ["I've made a huge mistake."],
+      fumble: ['A market failure. Textbook.', 'Sorry. Seven years in Toronto. It is reflexive.'],
     },
   },
   {
@@ -122,7 +138,7 @@ export const HEROES = [
       ],
       victory: ['The motion carries.', 'So ordered.', 'Clean. Like a well-sanded walnut bowl.', 'Reported favorably out of committee.'],
       lowHp: ["I'd like to request a recess."],
-      ko: ['I yield... the balance of my time...'],
+      ko: ['I yield... the balance of my time...', 'Someone... feed Charlie...'],
       levelUp: ['Amended and improved.'],
       rest: [
         'Fun fact about this dungeon\'s zoning... no? Okay.',
@@ -130,6 +146,11 @@ export const HEROES = [
         'This rest stop is legally a "temporary structure." I checked.',
         'I did demo and framing one summer. This wall is not load-bearing. Probably.',
         'Before we descend, has anyone reviewed the First Amendment exposure of that sphinx?',
+        "Mt. Kisco, Hopkinton, Ridgefield, Toronto, Boston. I've been the new kid in scarier places than this.",
+        'Does anyone want to see a picture of Charlie? I have four hundred. Here is the first one.',
+        'I miss Charlie. Charlie would love this dungeon. Charlie loves boxes.',
+        'Remember when Carolyn thought it was snowing in Hawaii?',
+        "Queen Anne's Way, Trail View, Overlook Drive. Three ski houses, one argument about who's fastest.",
       ],
       fumble: ['Strike that from the record.'],
     },
@@ -154,7 +175,7 @@ export const HEROES = [
     ],
     look: 'chachi',
     lines: {
-      battle: ['Challenge accepted!', 'Suit up!', 'Mile one. Easy pace. Then we destroy them.', "Whatever you do, don't say it'll be easy.", "I've covered the whole Rocky Mountain territory. I can cover this room."],
+      battle: ['Challenge accepted!', 'Suit up!', 'Mile one. Easy pace. Then we destroy them.', "Whatever you do, don't say it'll be easy.", "I've covered the whole Rocky Mountain territory. I can cover this room.", 'Youngest, fastest, and I will be telling Mom.'],
       victory: ['Easy. That was a warm-up lap.', 'High five! Tom. Tom, it is a high five, put your hand up.', 'And that, kids, is how we cleared that room.', 'Territory: secured.'],
       lowHp: ["I've hit the wall. I've hit walls before.", 'Deep breaths. Trust me, lungs are literally my job.'],
       ko: ['Save me... a finisher medal...'],
@@ -165,6 +186,10 @@ export const HEROES = [
         'Tom. Yankees in six. Say it back.',
         "Altitude training in Denver is paying off. Why is everyone breathing so hard?",
         'Neuroscience degree, and I still cannot explain why Tom does this.',
+        'We lived in Hopkinton. Where the Boston Marathon starts. It was destiny.',
+        'It DOES snow in Hawaii. Mauna Kea. Look it up. I was right.',
+        'Fastest skier in the family is me. This is not a debate. Tom, it is not a debate.',
+        "This campfire is nice. It's no Overlook Drive after a day at Mount Snow.",
       ],
       fumble: ['Haaave you met my aim? Neither have I.'],
     },
