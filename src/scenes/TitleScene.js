@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { W, H, C, T, hex } from '../ui/theme.js';
-import { panel, button } from '../ui/widgets.js';
+import { panel, button, isTouch } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
 import { buildBaseTextures, heroKey, idleAnim, CHARLIE } from '../art/sprites.js';
 import { HEROES } from '../data/heroes.js';
@@ -22,7 +22,7 @@ export default class TitleScene extends Phaser.Scene {
     this.add.text(W / 2, 138, 'Four siblings. One procedurally generated dungeon.\nZero agreement on strategy.', { ...T.body, fontSize: '24px', color: hex(C.dim), align: 'center' }).setOrigin(0.5);
 
     // The party lineup
-    const info = this.add.text(W / 2, 400, 'Hover a sibling to meet them.', { ...T.body, align: 'center', wordWrap: { width: 640 } }).setOrigin(0.5, 0);
+    const info = this.add.text(W / 2, 400, `${isTouch(this) ? 'Tap' : 'Hover'} a sibling to meet them.`, { ...T.body, align: 'center', wordWrap: { width: 640 } }).setOrigin(0.5, 0);
     const spacing = 170;
     const x0 = W / 2 - spacing * 1.5;
     HEROES.forEach((d, i) => {
@@ -51,7 +51,9 @@ export default class TitleScene extends Phaser.Scene {
     } else {
       b = button(this, W / 2 - 120, 444, 240, 44, 'Enter the dungeon', () => this.start(), { fontSize: '26px' });
     }
-    this.add.text(W / 2, 510, 'Click rooms to explore  ·  Turn-based fights  ·  d20 skill checks  ·  Press 1-5 for skills in battle', { ...T.small }).setOrigin(0.5);
+    this.add.text(W / 2, 510, isTouch(this)
+      ? 'Tap rooms to explore  ·  Turn-based fights  ·  d20 skill checks  ·  Hold a skill or room to read about it'
+      : 'Click rooms to explore  ·  Turn-based fights  ·  d20 skill checks  ·  Press 1-5 for skills in battle', { ...T.small }).setOrigin(0.5);
     this.input.keyboard?.once('keydown-ENTER', () => (saved ? this.resume() : this.start()));
     b.setDepth(2);
   }

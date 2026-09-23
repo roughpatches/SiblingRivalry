@@ -1,15 +1,19 @@
 import { C } from './theme.js';
+import { bake } from './bake.js';
+
+// Both the floor and the fog are hundreds of shapes, so each is baked into a
+// single image (see bake.js) instead of being re-drawn every frame.
 
 // A dim, floor-themed ground for the map panel, drawn under the rooms so the
 // empty space reads as the floor you're exploring rather than a black box.
 export function mapFloor(scene, theme, x, y, w, h) {
-  const g = scene.add.graphics();
+  const g = scene.make.graphics({ add: false });
   const r = mulberry((theme || 'basement').length * 97 + w);
   if (theme === 'office') office(g, r, x, y, w, h);
   else if (theme === 'snow') snow(g, r, x, y, w, h);
   else if (theme === 'dining') dining(g, r, x, y, w, h);
   else basement(g, r, x, y, w, h);
-  return g;
+  return bake(scene, g, x, y, w, h);
 }
 
 // Small seeded random so the pattern doesn't change every time the map redraws.
@@ -91,14 +95,15 @@ function dining(g, r, x, y, w, h) {
 // Soft drifting fog over cells nobody has seen yet. Each hidden cell gets a few
 // stacked, slightly oversized translucent rounded rectangles, so neighboring
 // hidden cells blend into one haze and the edge next to explored rooms stays soft.
-export function fog(scene, cells, cellW, cellH) {
-  const g = scene.add.graphics();
+export function fog(scene, cells, cellW, cellH, bounds) {
+  const g = scene.make.graphics({ add: false });
   for (const { x, y } of cells) {
     for (let i = 0; i < 5; i++) {
       const pad = 12 - i * 3;
       g.fillStyle(0x0b0a10, 0.13).fillRoundedRect(x - pad, y - pad, cellW + pad * 2, cellH + pad * 2, 18);
     }
   }
-  scene.tweens.add({ targets: g, alpha: { from: 0.82, to: 1 }, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-  return g;
+  const img = bake(scene, g, bounds.x, bounds.y, bounds.w, bounds.h);
+  scene.tweens.add({ targets: img, alpha: { from: 0.82, to: 1 }, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+  return img;
 }
