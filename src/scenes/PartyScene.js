@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { W, H, C, T, hex, RARITY } from '../ui/theme.js';
-import { panel, button, bar } from '../ui/widgets.js';
+import { panel, button, bar, tapToInspect, isTouch } from '../ui/widgets.js';
 import { heroKey, portraitKey, idleAnim } from '../art/sprites.js';
 import { HERO_BY_ID, BRONX_BOMBERS } from '../data/heroes.js';
 import { statLine, STAT_LABEL } from '../data/items.js';
@@ -17,6 +17,8 @@ export default class PartyScene extends Phaser.Scene {
   }
 
   create() {
+    // On touch, a skill description stays up until you tap empty space.
+    this.input.on('pointerdown', (p, over) => { if (p.wasTouch && !over.length) this.hideTip(); });
     this.add.rectangle(0, 0, W, H, 0x000000, 0.7).setOrigin(0).setInteractive();
     panel(this, 16, 14, W - 32, H - 28, { fill: C.stone, edge: C.gold });
     this.layer = this.add.container(0, 0);
@@ -95,15 +97,14 @@ export default class PartyScene extends Phaser.Scene {
     add(this.add.text(X + 4, 250, d.passive.desc, { ...T.small, fontSize: '17px', wordWrap: { width: 360 }, lineSpacing: -3 }));
 
     // skills: name + cooldown; hover for the full description
-    add(this.add.text(X + 4, 300, 'SKILLS (hover for details)', { ...T.label }));
+    add(this.add.text(X + 4, 300, `SKILLS (${isTouch(this) ? 'tap' : 'hover'} for details)`, { ...T.label }));
     d.skills.forEach((sk, i) => {
       const locked = h.level < sk.level;
       const y = 318 + i * 23;
       const t = add(this.add.text(X + 4, y, sk.name, { ...T.body, fontSize: '20px', color: hex(locked ? C.edge : C.parch) }));
       add(this.add.text(X + 356, y + 2, locked ? `unlocks LV ${sk.level}` : sk.cd ? `cooldown ${sk.cd}` : 'basic', { ...T.small, fontSize: '17px', color: hex(locked ? C.edge : C.dim) }).setOrigin(1, 0));
       const z = add(this.add.zone(X, y, 360, 22).setOrigin(0).setInteractive());
-      z.on('pointerover', () => this.showTip(X + 20, y + 26, sk.desc));
-      z.on('pointerout', () => this.hideTip());
+      tapToInspect(z, () => this.showTip(X + 20, y + 26, sk.desc), () => this.hideTip());
     });
 
     // equipment

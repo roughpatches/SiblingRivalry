@@ -41,9 +41,12 @@ export function button(scene, x, y, w, h, label, onClick, opts = {}) {
   draw();
   const zone = scene.add.zone(0, 0, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
   c.add(zone);
-  zone.on('pointerover', () => { hover = true; draw(); if (opts.onHover) opts.onHover(true); });
-  zone.on('pointerout', () => { hover = false; draw(); if (opts.onHover) opts.onHover(false); });
-  zone.on('pointerup', () => { if (enabled) { sfx('click'); onClick(); } });
+  zone.on('pointerover', () => { hover = true; draw(); });
+  zone.on('pointerout', () => { hover = false; draw(); });
+  // Buttons with extra info (skills, items) show it on hover, or on press-and-hold by touch.
+  // Works on disabled buttons too, so a locked skill can still be read.
+  const wasHeld = opts.onHover ? holdToInspect(scene, zone, () => opts.onHover(true), () => opts.onHover(false)) : () => false;
+  zone.on('pointerup', () => { if (wasHeld()) return; if (enabled) { sfx('click'); onClick(); } });
   c.setEnabled = (v) => { enabled = v; draw(); return c; };
   c.setLabel = (s) => { txt.setText(s); return c; };
   c.w = w; c.h = h;
@@ -81,9 +84,55 @@ export function floatText(scene, x, y, msg, color = C.parch, size = 28) {
   return t;
 }
 
-// Small hover tooltip anchored to the pointer area.
+// ---------------------------------------------------------------- touch
+// Phones have no hover. Things that also do something when tapped (skills,
+// items, map rooms, fighters) show their info on press-and-hold instead, and
+// the lift that ends a hold does nothing. Mouse behavior is unchanged.
+export const HOLD_MS = 380;
+
+// Hover with a mouse, press-and-hold with a finger. Returns wasHeld(): the tap
+// handler calls it and skips its action when the press was a hold.
+// Tap vs. hold is decided only on lift, from the browser's own touch
+// timestamps (when the finger actually went down and up), so a slow or busy
+// device can't mistake one for the other. While the finger is still down, a
+// real-time timer shows the info early as a preview.
+const stamp = (p) => p.event?.timeStamp ?? performance.now();
+
+export function holdToInspect(scene, obj, show, hide) {
+  let timer = null, held = false, downAt = 0;
+  const cancel = () => { clearTimeout(timer); timer = null; };
+  obj.on('pointerover', (p) => { if (!p.wasTouch) show(); });
+  obj.on('pointerout', (p) => { if (p.wasTouch) cancel(); else hide(); });
+  obj.on('pointerdown', (p) => {
+    if (!p.wasTouch) return;
+    held = false;
+    downAt = stamp(p);
+    cancel();
+    timer = setTimeout(() => { if (obj.scene) show(); }, HOLD_MS);
+  });
+  obj.on('pointerup', (p) => {
+    cancel();
+    held = p.wasTouch && stamp(p) - downAt >= HOLD_MS;
+    if (held) show();
+  });
+  return () => { const h = held; held = false; return h; };
+}
+
+// Info-only things: hover with a mouse, a single tap with a finger.
+export function tapToInspect(obj, show, hide) {
+  obj.on('pointerover', (p) => { if (!p.wasTouch) show(); });
+  obj.on('pointerout', (p) => { if (!p.wasTouch) hide(); });
+  obj.on('pointerdown', (p) => { if (p.wasTouch) show(); });
+}
+
+// True on phones and tablets, for wording hints ("tap" vs "click").
+export const isTouch = (scene) => !!scene.sys.game.device.input.touch && navigator.maxTouchPoints > 0;
+
+// Small hover tooltip anchored to the pointer area. On touch it stays up until
+// the player taps empty space or something else replaces it.
 export function tooltip(scene) {
   const c = scene.add.container(0, 0).setDepth(100).setVisible(false);
+  scene.input.on('pointerdown', (p, over) => { if (p.wasTouch && !over.length) c.setVisible(false); });
   const bg = scene.add.graphics();
   const txt = scene.add.text(10, 8, '', { ...T.body, fontSize: '19px', wordWrap: { width: 300 }, lineSpacing: -2 });
   c.add([bg, txt]);
@@ -96,5 +145,6 @@ export function tooltip(scene) {
       c.setVisible(true);
     },
     hide() { c.setVisible(false); },
+    get shown() { return c.visible; },
   };
 }

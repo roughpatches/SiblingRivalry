@@ -1,4 +1,5 @@
-import { W, T } from './theme.js';
+import { W, H, T } from './theme.js';
+import { bake } from './bake.js';
 
 // Floor-specific props drawn over the brick backdrop in battle.
 // Everything sits in the gaps between the party (left) and the enemies (right),
@@ -8,12 +9,14 @@ import { W, T } from './theme.js';
 const FLOOR_Y = 360, FLOOR_H = 40;
 
 export function scenery(scene, theme) {
-  const g = scene.add.graphics().setDepth(-6);
+  // The static props are baked into one image; animated bits (bulb glow,
+  // flickering panel, candles, chairlift, snow) stay live objects on top.
+  const g = scene.make.graphics({ add: false });
   if (theme === 'office') office(scene, g);
   else if (theme === 'dining') dining(scene, g);
   else if (theme === 'snow') snow(scene, g);
   else basement(scene, g);
-  return g;
+  return bake(scene, g, 0, 0, W, H, -6);
 }
 
 // Whether the floor keeps the dungeon's wall torches.

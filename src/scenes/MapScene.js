@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { W, H, C, T, hex, RARITY } from '../ui/theme.js';
-import { panel, button, bar, tooltip } from '../ui/widgets.js';
+import { panel, button, bar, tooltip, holdToInspect, isTouch } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
 import { buildBaseTextures, heroKey, portraitKey, iconKey, CHARLIE } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
@@ -62,7 +62,9 @@ export default class MapScene extends Phaser.Scene {
 
     if (this.incoming.msg) this.say(this.incoming.msg);
     else if (this.incoming.intro) this.say(`${fd.name}. ${pickLine(rng.pick(['tom', 'stephen', 'andrew', 'chachi']), 'battle')}`);
-    else this.say('Click a lit doorway to move. Rooms you have visited can be revisited freely.');
+    else this.say(isTouch(this)
+      ? 'Tap a lit doorway to move. Hold a room to see what it is.'
+      : 'Click a lit doorway to move. Rooms you have visited can be revisited freely.');
 
     if (this.incoming.intro) {
       this.cameras.main.fadeIn(350, 0, 0, 0);
@@ -99,7 +101,7 @@ export default class MapScene extends Phaser.Scene {
     for (let cx = 0; cx < COLS; cx++) for (let cy = 0; cy < ROWS; cy++) {
       if (!seenAt.has(`${cx},${cy}`)) hidden.push({ x: MAP_X + cx * CELL_W, y: MAP_Y + cy * CELL_H });
     }
-    this.mapLayer.add(fog(this, hidden, CELL_W, CELL_H));
+    this.mapLayer.add(fog(this, hidden, CELL_W, CELL_H, { x: MAP_X - 14, y: MAP_Y - 14, w: COLS * CELL_W + 28, h: ROWS * CELL_H + 28 }));
     const g = this.add.graphics();
     this.mapLayer.add(g);
 
@@ -160,17 +162,21 @@ export default class MapScene extends Phaser.Scene {
 
       const zone = this.add.zone(x, y, ROOM, ROOM).setInteractive({ useHandCursor: canGo || (isCur && t === 'stairs') });
       this.mapLayer.add(zone);
-      zone.on('pointerover', () => {
+      const verb = isTouch(this) ? 'Tap' : 'Click';
+      const showRoom = () => {
         let s = LABEL[t];
         if (r.cleared && t !== 'stairs' && t !== 'start') s += ' (cleared)';
         if (t === 'unknown') s += '\nChachi is down, so nobody is scouting ahead.';
-        if (canGo) s += '\nClick to go here.';
-        if (isCur && t === 'stairs') s += '\nClick to descend.';
+        if (canGo) s += `\n${verb} to go here.`;
+        if (isCur && t === 'stairs') s += `\n${verb} to descend.`;
         this.tip.show(x + 30, y - 10, s);
-        if (canGo) box.lineStyle(3, C.gold, 1).strokeRect(-h + 1, -h + 1, ROOM - 2, ROOM - 2);
-      });
-      zone.on('pointerout', () => { this.tip.hide(); if (canGo) { box.lineStyle(2, C.edge, 1).strokeRect(-h + 1, -h + 1, ROOM - 2, ROOM - 2); } });
+      };
+      // Room name: hover with a mouse, hold with a finger (a tap travels).
+      const wasHeld = holdToInspect(this, zone, showRoom, () => this.tip.hide());
+      zone.on('pointerover', () => { if (canGo) box.lineStyle(3, C.gold, 1).strokeRect(-h + 1, -h + 1, ROOM - 2, ROOM - 2); });
+      zone.on('pointerout', () => { if (canGo) { box.lineStyle(2, C.edge, 1).strokeRect(-h + 1, -h + 1, ROOM - 2, ROOM - 2); } });
       zone.on('pointerup', () => {
+        if (wasHeld()) return;
         if (this.busy) return;
         if (canGo) this.travel(r);
         else if (isCur && t === 'stairs') this.stairsModal();
@@ -517,9 +523,8 @@ export default class MapScene extends Phaser.Scene {
       xb.set(h.xp, xpToNext(h.level));
       L.add(xb.g);
       const z = this.add.zone(px, y, pw, ch).setOrigin(0).setInteractive({ useHandCursor: true });
-      z.on('pointerup', () => { if (!this.busy) this.openParty(h.id); });
-      z.on('pointerover', () => this.tip.show(px - 250, y, `${d.passive.name}: ${d.passive.desc}\nClick for gear and skills.`));
-      z.on('pointerout', () => this.tip.hide());
+      const panelHeld = holdToInspect(this, z, () => this.tip.show(px - 250, y, `${d.passive.name}: ${d.passive.desc}\n${isTouch(this) ? 'Tap' : 'Click'} for gear and skills.`), () => this.tip.hide());
+      z.on('pointerup', () => { if (!panelHeld() && !this.busy) this.openParty(h.id); });
       L.add(z);
       y += ch + 6;
     }

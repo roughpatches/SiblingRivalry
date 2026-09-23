@@ -1,8 +1,10 @@
 import { W, H, C } from './theme.js';
+import { bake } from './bake.js';
 
 // Stone-brick wall with flickering torch glow. tint shifts per floor.
 export function backdrop(scene, tint = 0x2a2436, opts = {}) {
-  const g = scene.add.graphics().setDepth(-10);
+  // Bricks and vignette are hundreds of rectangles: baked into one image.
+  const g = scene.make.graphics({ add: false });
   g.fillStyle(C.ink, 1).fillRect(0, 0, W, H);
   const bw = 48, bh = 24;
   for (let row = 0; row * bh < H; row++) {
@@ -14,12 +16,12 @@ export function backdrop(scene, tint = 0x2a2436, opts = {}) {
     }
   }
   // vignette
-  const v = scene.add.graphics().setDepth(-9);
   for (let i = 0; i < 10; i++) {
-    v.fillStyle(0x000000, 0.06);
-    v.fillRect(0, 0, W, 18 + i * 10);
-    v.fillRect(0, H - 18 - i * 10, W, 18 + i * 10);
+    g.fillStyle(0x000000, 0.06);
+    g.fillRect(0, 0, W, 18 + i * 10);
+    g.fillRect(0, H - 18 - i * 10, W, 18 + i * 10);
   }
+  const wall = bake(scene, g, 0, 0, W, H, -10);
   if (opts.torches !== false) {
     const spots = opts.torches || [[40, 70], [W - 40, 70]];
     for (const [x, y] of spots) {
@@ -31,5 +33,5 @@ export function backdrop(scene, tint = 0x2a2436, opts = {}) {
       scene.tweens.add({ targets: flame, scaleY: { from: 0.8, to: 1.2 }, duration: 160, yoyo: true, repeat: -1 });
     }
   }
-  return g;
+  return wall;
 }

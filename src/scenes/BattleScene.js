@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { W, H, C, T, hex, RARITY } from '../ui/theme.js';
-import { panel, button, bar, floatText, tooltip } from '../ui/widgets.js';
+import { panel, button, bar, floatText, tooltip, holdToInspect, tapToInspect, isTouch } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
 import { scenery, hasTorches } from '../ui/scenery.js';
 import * as fx from '../ui/fx.js';
@@ -143,16 +143,23 @@ export default class BattleScene extends Phaser.Scene {
     u.ring = this.add.ellipse(u.x, u.y + 40 * scale, 76 * scale, 20 * scale).setStrokeStyle(2, C.gold, 1).setVisible(false);
     const zone = this.add.zone(u.x, u.y, 70 * scale, 80 * scale).setInteractive({ useHandCursor: true });
     u.zone = zone;
-    zone.on('pointerup', () => this.onUnitClick(u));
-    zone.on('pointerover', () => {
-      if (this.targeting && this.targeting.valid.includes(u)) u.spr.setTint(0xfff0a0);
+    const showStats = () => {
       const st = Object.keys(u.statuses).map((k) => STATUS_TAG[k]?.[0]).filter(Boolean).join(' ');
       const lines = [`${u.name}  ${Math.max(0, u.hp)}/${u.max} HP`, `ATK ${u.atk} · DEF ${u.def} · SPD ${u.spd}`];
       if (u.shield) lines.push(`Shield ${u.shield}`);
       if (st) lines.push(st);
       this.tip.show(u.x + 40, u.y - 70, lines.join('\n'));
+    };
+    // Stats: hover with a mouse, hold with a finger (a plain tap picks a target,
+    // or shows the stats when there is nothing to pick).
+    const wasHeld = holdToInspect(this, zone, showStats, () => this.tip.hide());
+    zone.on('pointerup', (p) => {
+      if (wasHeld()) return;
+      if (this.targeting) this.onUnitClick(u);
+      else if (p.wasTouch) showStats();
     });
-    zone.on('pointerout', () => { if (u.alive) u.spr.clearTint(); this.tip.hide(); if (this.targeting?.valid.includes(u)) u.spr.setTint(0xffe28a); });
+    zone.on('pointerover', () => { if (this.targeting && this.targeting.valid.includes(u)) u.spr.setTint(0xfff0a0); });
+    zone.on('pointerout', () => { if (u.alive) u.spr.clearTint(); if (this.targeting?.valid.includes(u)) u.spr.setTint(0xffe28a); });
     this.refreshTags(u);
   }
 
@@ -347,7 +354,7 @@ export default class BattleScene extends Phaser.Scene {
     if (items.length) this.hotkeys[4] = () => this.showItems(u);
     // passive reminder
     const pas = this.add.text(386, 488, `${u.def0.passive.name}`, { ...T.small, fontSize: '17px', wordWrap: { width: 170 } });
-    pas.setInteractive().on('pointerover', () => this.tip.show(386, 400, u.def0.passive.desc)).on('pointerout', () => this.tip.hide());
+    tapToInspect(pas.setInteractive(), () => this.tip.show(386, 400, u.def0.passive.desc), () => this.tip.hide());
     this.actionLayer.add(pas);
   }
 
@@ -384,20 +391,22 @@ export default class BattleScene extends Phaser.Scene {
   chooseSkill(u, sk) {
     this.tip.hide();
     if (sk.target === 'enemy') {
-      this.beginTarget(u, this.liveEnemies(), (t) => this.doSkill(u, sk, t), () => this.showActions(u), `${sk.name}: pick a target`);
+      this.beginTarget(u, this.liveEnemies(), (t) => this.doSkill(u, sk, t), () => this.showActions(u), `${sk.name}: pick a target`, sk.desc);
     } else if (sk.target === 'ally') {
-      this.beginTarget(u, this.liveHeroes(), (t) => this.doSkill(u, sk, t), () => this.showActions(u), `${sk.name}: pick a sibling`);
+      this.beginTarget(u, this.liveHeroes(), (t) => this.doSkill(u, sk, t), () => this.showActions(u), `${sk.name}: pick a sibling`, sk.desc);
     } else {
       this.doSkill(u, sk, null);
     }
   }
 
-  beginTarget(u, valid, onPick, onBack, label) {
+  beginTarget(u, valid, onPick, onBack, label, desc) {
     this.clearActions(label.toUpperCase());
     this.targeting = { valid, onPick, onBack };
     valid.forEach((v) => { v.spr.setTint(0xffe28a); });
-    const hint = this.add.text(22, 440, 'Click a highlighted target.', { ...T.body });
-    const back = button(this, 22, 482, 176, 40, 'Back', () => this.cancelTarget(), { color: C.dim });
+    // Repeat what the skill does while choosing, since phones never saw the hover text.
+    const how = `${isTouch(this) ? 'Tap' : 'Click'} a highlighted target.`;
+    const hint = this.add.text(22, 432, desc ? `${desc}\n${how}` : how, { ...T.body, fontSize: '18px', wordWrap: { width: 530 }, lineSpacing: -3 });
+    const back = button(this, 386, 482, 176, 40, 'Back', () => this.cancelTarget(), { color: C.dim });
     this.actionLayer.add([hint, back]);
     this.hotkeys = [];
     if (valid.length === 1) { /* still require a click so it isn't surprising */ }
