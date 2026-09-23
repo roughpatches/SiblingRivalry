@@ -26,6 +26,8 @@ npm run build    # one self-contained dist/index.html (fonts and Phaser inlined)
   a rest stop, the Banana Stand shop, and a boss guarding the stairs.
 - **Combat**: speed decides turn order each round. Every attack rolls a d20: a 1 whiffs, a 20 crits.
   Skills have cooldowns; the fourth skill unlocks at level 3. Hotkeys 1-5.
+- **Perks**: from level 4 on, every level-up offers each sibling two perks (stat boosts or upgrades to
+  their own skills) and they keep one.
 - **Skill checks**: pick a sibling, roll d20 + their Math / Lore / Charm / Grit, beat the DC.
   The button shows each sibling's odds before you commit.
 - **Loot**: gear has a weapon or trinket slot and random stats. Signature legendaries
@@ -38,6 +40,7 @@ npm run build    # one self-contained dist/index.html (fonts and Phaser inlined)
 | File | What's in it |
 | --- | --- |
 | `src/data/heroes.js` | The four siblings: stats, skills, passives, all their lines |
+| `src/data/perks.js` | Level 4+ perks: six per sibling, pick one of two at each level-up |
 | `src/data/banter.js` | Sibling-to-sibling exchanges at rest stops, fight starts and wins |
 | `src/data/enemies.js` | Monsters, bosses, and floor definitions |
 | `src/data/events.js` | Skill-check rooms and trivia questions |
