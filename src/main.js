@@ -10,10 +10,11 @@ import PartyScene from './scenes/PartyScene.js';
 import EndScene from './scenes/EndScene.js';
 import HudScene from './scenes/HudScene.js';
 import { unlockAudio, soundDebug, music, sfx } from './systems/sound.js';
-import { G, descend } from './systems/state.js';
+import { G, descend, heroStats } from './systems/state.js';
 
-// Console helpers for testing: __run(), __party(), __map(), __descend()
+// Console helpers for testing: __run(), __stats(hero), __party(), __map(), __descend()
 window.__run = () => G.run;
+window.__stats = (h) => heroStats(h);
 window.__party = () => G.run?.party;
 window.__map = () => G.run?.map;
 window.__descend = () => descend();
@@ -32,6 +33,18 @@ async function fontsReady() {
 // Browsers only allow audio after a user gesture.
 for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, unlockAudio);
 
+// Dev-only fast mode for the balance autopilot (scripts/balance.mjs): open the
+// game with ?sim (or ?sim=40 for a custom speed) to skip drawing and run the game
+// clock many times faster. The published page never receives a query string.
+const SIM = new URLSearchParams(location.search).get('sim');
+
+function enableSim(game, speed) {
+  // Every timer, tween and fade runs on game time, so scaling each frame's
+  // delta fast-forwards the whole game through the real code.
+  game.step = function (time, delta) { return Phaser.Game.prototype.step.call(this, time, delta * speed); };
+  game.events.once('ready', () => { game.scene.render = () => {}; });
+}
+
 fontsReady().then(() => {
   document.getElementById('boot')?.remove();
   window.__game = new Phaser.Game({
@@ -45,4 +58,5 @@ fontsReady().then(() => {
     // Hud is last so it draws above every other scene.
     scene: [TitleScene, MapScene, BattleScene, EventScene, PartyScene, EndScene, HudScene],
   });
+  if (SIM !== null) enableSim(window.__game, Number(SIM) || 25);
 });
