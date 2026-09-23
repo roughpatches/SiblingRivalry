@@ -4,7 +4,8 @@ import { panel, button, bar, tooltip } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
 import { buildBaseTextures, heroKey, portraitKey, iconKey, CHARLIE } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
-import { floorDef } from '../data/enemies.js';
+import { FLOORS, floorDef } from '../data/enemies.js';
+import { mapFloor, fog } from '../ui/mapfloor.js';
 import { makeGear, makeConsumable, statLine, CONSUMABLES } from '../data/items.js';
 import { G, heroStats, xpToNext, addToBag, healHero, pickLine, descend, alive } from '../systems/state.js';
 import { COLS, ROWS, updateVisibility } from '../systems/dungeon.js';
@@ -37,10 +38,18 @@ export default class MapScene extends Phaser.Scene {
     this.modalLayer = null;
     this.partyLayer = null;
 
-    this.add.text(MAP_X, 18, fd.name.toUpperCase(), { ...T.h2, fontSize: '22px' }).setStroke('#000', 4);
+    const title = this.add.text(MAP_X, 18, fd.name.toUpperCase(), { ...T.h2, fontSize: '22px' }).setStroke('#000', 4);
     this.add.text(MAP_X, 46, fd.sub, { ...T.small, fontSize: '20px' });
+    // Progress pips: one per floor, filled up to the current one.
+    const lap = (run.floor - 1) % FLOORS.length;
+    FLOORS.forEach((_, i) => {
+      const px = MAP_X + title.width + 22 + i * 16, py = 31;
+      const pip = this.add.circle(px, py, 5, i <= lap ? C.gold : C.stone3).setStrokeStyle(1, 0x000000, 0.8);
+      if (i === lap) this.tweens.add({ targets: pip, scale: { from: 1, to: 1.35 }, duration: 700, yoyo: true, repeat: -1 });
+    });
 
     panel(this, MAP_X - 8, MAP_Y - 10, COLS * CELL_W + 16, ROWS * CELL_H + 20, { fill: C.ink, alpha: 0.75 });
+    mapFloor(this, fd.theme, MAP_X - 4, MAP_Y - 6, COLS * CELL_W + 8, ROWS * CELL_H + 12);
     this.mapLayer = this.add.container(0, 0);
     this.drawMap();
 
@@ -80,13 +89,15 @@ export default class MapScene extends Phaser.Scene {
     const map = G.run.map;
     const rooms = map.rooms;
     const cur = rooms[map.current];
+    // Fog over every cell that has no room you've seen yet.
+    const seenAt = new Set(rooms.filter((r) => r.seen).map((r) => `${r.x},${r.y}`));
+    const hidden = [];
+    for (let cx = 0; cx < COLS; cx++) for (let cy = 0; cy < ROWS; cy++) {
+      if (!seenAt.has(`${cx},${cy}`)) hidden.push({ x: MAP_X + cx * CELL_W, y: MAP_Y + cy * CELL_H });
+    }
+    this.mapLayer.add(fog(this, hidden, CELL_W, CELL_H));
     const g = this.add.graphics();
     this.mapLayer.add(g);
-    // faint grid dots hint at unexplored space
-    g.fillStyle(C.stone3, 0.5);
-    for (let cx = 0; cx < COLS; cx++) for (let cy = 0; cy < ROWS; cy++) {
-      g.fillRect(MAP_X + cx * CELL_W + CELL_W / 2 - 2, MAP_Y + cy * CELL_H + CELL_H / 2 - 2, 4, 4);
-    }
 
     // corridors
     for (const r of rooms) {
@@ -105,6 +116,7 @@ export default class MapScene extends Phaser.Scene {
     }
 
     const reachable = this.reachableRooms();
+    let popIndex = 0;
 
     for (const r of rooms) {
       if (!r.seen) continue;
@@ -112,18 +124,35 @@ export default class MapScene extends Phaser.Scene {
       const t = this.displayType(r);
       const isCur = r.id === map.current;
       const canGo = reachable.has(r.id) && !isCur;
+      const room = this.add.container(x, y);
       const box = this.add.graphics();
+      const h = ROOM / 2;
       const fill = r.visited ? (r.type === 'boss' && !r.cleared ? 0x4a1f28 : C.stone2) : C.stone;
-      box.fillStyle(0x000000, 0.5).fillRect(x - ROOM / 2 + 3, y - ROOM / 2 + 4, ROOM, ROOM);
-      box.fillStyle(fill, 1).fillRect(x - ROOM / 2, y - ROOM / 2, ROOM, ROOM);
+      box.fillStyle(0x000000, 0.5).fillRect(-h + 3, -h + 4, ROOM, ROOM);
+      box.fillStyle(fill, 1).fillRect(-h, -h, ROOM, ROOM);
       const edgeCol = isCur ? C.gold : canGo ? C.edge : C.stone3;
-      box.lineStyle(isCur ? 3 : 2, edgeCol, 1).strokeRect(x - ROOM / 2 + 1, y - ROOM / 2 + 1, ROOM - 2, ROOM - 2);
-      this.mapLayer.add(box);
+      box.lineStyle(isCur ? 3 : 2, edgeCol, 1).strokeRect(-h + 1, -h + 1, ROOM - 2, ROOM - 2);
+      room.add(box);
 
-      const icon = this.add.image(x, y, iconKey(t === 'start' ? 'start' : t)).setAlpha(r.cleared && t !== 'stairs' && t !== 'start' ? 0.28 : 1);
+      const done = r.cleared && t !== 'stairs' && t !== 'start';
+      const icon = this.add.image(0, 0, iconKey(t === 'start' ? 'start' : t)).setAlpha(done ? 0.35 : 1);
       if (t === 'boss') icon.setTint(0xff8a80);
       if (!r.visited && !canGo) icon.setAlpha(0.45);
-      this.mapLayer.add(icon);
+      room.add(icon);
+      // Cleared rooms get a small green check in the corner (not where the party stands).
+      if (done && !isCur) {
+        const badge = this.add.graphics();
+        badge.fillStyle(0x1a3a22, 1).fillCircle(h - 7, -h + 7, 8).lineStyle(1, 0x000000, 0.8).strokeCircle(h - 7, -h + 7, 8);
+        badge.lineStyle(2, C.green, 1).lineBetween(h - 11, -h + 7, h - 8, -h + 10).lineBetween(h - 8, -h + 10, h - 3, -h + 3);
+        room.add(badge);
+      }
+      this.mapLayer.add(room);
+      // First time a room is seen, it pops in.
+      if (!r.shown) {
+        r.shown = true;
+        room.setScale(0.4).setAlpha(0);
+        this.tweens.add({ targets: room, scale: 1, alpha: 1, duration: 260, delay: 120 + popIndex++ * 70, ease: 'Back.easeOut' });
+      }
 
       const zone = this.add.zone(x, y, ROOM, ROOM).setInteractive({ useHandCursor: canGo || (isCur && t === 'stairs') });
       this.mapLayer.add(zone);
@@ -134,9 +163,9 @@ export default class MapScene extends Phaser.Scene {
         if (canGo) s += '\nClick to go here.';
         if (isCur && t === 'stairs') s += '\nClick to descend.';
         this.tip.show(x + 30, y - 10, s);
-        if (canGo) box.lineStyle(3, C.gold, 1).strokeRect(x - ROOM / 2 + 1, y - ROOM / 2 + 1, ROOM - 2, ROOM - 2);
+        if (canGo) box.lineStyle(3, C.gold, 1).strokeRect(-h + 1, -h + 1, ROOM - 2, ROOM - 2);
       });
-      zone.on('pointerout', () => { this.tip.hide(); if (canGo) { box.lineStyle(2, C.edge, 1).strokeRect(x - ROOM / 2 + 1, y - ROOM / 2 + 1, ROOM - 2, ROOM - 2); } });
+      zone.on('pointerout', () => { this.tip.hide(); if (canGo) { box.lineStyle(2, C.edge, 1).strokeRect(-h + 1, -h + 1, ROOM - 2, ROOM - 2); } });
       zone.on('pointerup', () => {
         if (this.busy) return;
         if (canGo) this.travel(r);
@@ -162,6 +191,17 @@ export default class MapScene extends Phaser.Scene {
     });
     this.mapLayer.add(this.token);
     this.tweens.add({ targets: this.token, y: c.y - 3, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+  }
+
+  // A few fading footprints along one step of the party's walk.
+  footprints(x0, y0, x1, y1) {
+    for (let i = 1; i <= 3; i++) {
+      const t = i / 4, side = i % 2 ? -4 : 4;
+      const vertical = Math.abs(y1 - y0) > Math.abs(x1 - x0);
+      const fx = x0 + (x1 - x0) * t + (vertical ? side : 0), fy = y0 + (y1 - y0) * t + (vertical ? 0 : side);
+      const step = this.add.ellipse(fx, fy, 5, 7, C.parch, 0.5).setDepth(5);
+      this.tweens.add({ targets: step, alpha: 0, duration: 900, delay: i * 40, onComplete: () => step.destroy() });
+    }
   }
 
   // Rooms you can click: neighbors of any visited room reachable through visited rooms.
@@ -208,7 +248,10 @@ export default class MapScene extends Phaser.Scene {
     const steps = path.map((id) => this.cellCenter(map.rooms[id]));
     this.tweens.chain({
       targets: this.token,
-      tweens: steps.map((p) => ({ x: p.x, y: p.y, duration: 170, ease: 'Sine.easeInOut' })),
+      tweens: steps.map((p) => ({
+        x: p.x, y: p.y, duration: 170, ease: 'Sine.easeInOut',
+        onStart: () => this.footprints(this.token.x, this.token.y, p.x, p.y),
+      })),
       onComplete: () => {
         map.current = room.id;
         this.enter(room);
