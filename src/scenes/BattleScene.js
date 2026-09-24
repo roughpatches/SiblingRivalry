@@ -10,9 +10,13 @@ import { HERO_BY_ID } from '../data/heroes.js';
 import { ENEMIES, FLOORS, TUNING, floorDef } from '../data/enemies.js';
 import { makeGear, makeConsumable, statLine } from '../data/items.js';
 import { G, heroStats, gainXp, addToBag, removeFromBag, pickLine, banterSeen, heroTotals } from '../systems/state.js';
-import { pickBanter } from '../data/banter.js';
+import { pickBanter, pickBanterLines } from '../data/banter.js';
+import { speechBubble } from '../ui/speech.js';
 import { perkMods, perksForSkill } from '../data/perks.js';
 import { rng, d20 } from '../systems/rng.js';
+
+// How long a line of dialogue stays up: long enough to read, never forever.
+const readMs = (text) => Math.min(4500, 1600 + text.length * 45);
 
 const HERO_POS = [[262, 116], [184, 196], [262, 276], [184, 352]];
 const ENEMY_POS = { 1: [[745, 225]], 2: [[700, 170], [810, 280]], 3: [[690, 150], [820, 225], [690, 315]] };
@@ -50,11 +54,18 @@ export default class BattleScene extends Phaser.Scene {
     this.buildUi();
 
     // Sometimes two siblings trade lines as the fight starts; otherwise one speaks.
-    const exchange = rng() < 0.3 ? this.banter('battle') : null;
-    if (exchange) exchange.forEach((l) => this.log(l));
-    else {
+    const exchange = rng() < 0.3 ? this.banterLines('battle') : null;
+    if (exchange) {
+      // Each line waits for the one before it to be read.
+      let at = 250;
+      for (const { id, text } of exchange) {
+        const u = this.heroes().find((h) => h.id === id);
+        this.time.delayedCall(at, () => this.say(u, text));
+        at += readMs(text) + 150;
+      }
+    } else {
       const speaker = rng.pick(this.heroes().filter((u) => u.alive));
-      this.log(`${speaker.name}: "${pickLine(speaker.id, 'battle')}"`);
+      this.time.delayedCall(250, () => this.say(speaker, pickLine(speaker.id, 'battle')));
     }
     this.round = 0;
     this.time.delayedCall(450, () => this.startRound());
@@ -693,7 +704,8 @@ export default class BattleScene extends Phaser.Scene {
       floatText(this, tgt.x, tgt.y - 30, 'MISS', C.dim, 24);
       if (src.side === 'hero') {
         G.run.stats.nat1 += 1;
-        this.log(`Nat 1! ${src.name}: "${pickLine(src.id, 'fumble')}"`);
+        this.log('Nat 1!');
+        this.say(src, pickLine(src.id, 'fumble'));
       } else this.log(`${src.name} whiffs completely.`);
       return 0;
     }
@@ -736,7 +748,7 @@ export default class BattleScene extends Phaser.Scene {
     if (tgt.hp <= 0) this.ko(tgt);
     else if (tgt.side === 'hero' && tgt.hp < tgt.max * 0.3 && !tgt.saidLow) {
       tgt.saidLow = true;
-      this.time.delayedCall(350, () => this.log(`${tgt.name}: "${pickLine(tgt.id, 'lowHp')}"`));
+      this.time.delayedCall(350, () => this.say(tgt, pickLine(tgt.id, 'lowHp')));
     }
     this.refreshTags(tgt);
     return shown;
@@ -780,7 +792,7 @@ export default class BattleScene extends Phaser.Scene {
     u.shield = 0;
     if (u.side === 'hero') {
       u.ref.hp = 0;
-      this.log(`${u.name}: "${pickLine(u.id, 'ko')}"`);
+      this.say(u, pickLine(u.id, 'ko'));
       sfx('ko');
       this.koPose(u);
     } else {
@@ -820,7 +832,25 @@ export default class BattleScene extends Phaser.Scene {
 
   // A sibling exchange for this moment among whoever is still standing, or null.
   banter(when) {
-    return pickBanter(when, { standing: this.liveHeroes().map((h) => h.id), theme: floorDef(G.run.floor).theme, seen: banterSeen() });
+    return pickBanter(when, this.banterOpts());
+  }
+  banterLines(when) {
+    return pickBanterLines(when, this.banterOpts());
+  }
+  banterOpts() {
+    return { standing: this.liveHeroes().map((h) => h.id), theme: floorDef(G.run.floor).theme, seen: banterSeen() };
+  }
+
+  // A line of dialogue: a speech bubble by the speaker's head, and a copy in the log.
+  // One bubble at a time, so a new line replaces whatever was still showing.
+  say(u, text) {
+    if (!text || !u) return;
+    this.log(`${u.name}: "${text}"`);
+    this.bubble?.dismiss();
+    // minY keeps bubbles clear of the turn-order bar across the top. Siblings in the
+    // back column talk beside their heads, so the bubble doesn't cover the one in front.
+    const back = u.x < Math.max(...HERO_POS.map(([x]) => x));
+    this.bubble = speechBubble(this, u.x + 18, u.y - 30, text, readMs(text), { minY: 70, beside: back });
   }
 
   // Hold a single frame ('lean', 'recoil', 'blink') until resumeIdle.
