@@ -34,16 +34,20 @@ export function connect() {
 }
 
 // ------------------------------------------------------------------ recording
-// The sibling who did the most this run: damage dealt, healing done, and half
-// credit for hits soaked up.
+// Each sibling's usual share of the work (damage dealt + healing done + half the
+// hits soaked up), measured with scripts/balance.mjs. Chachi and Tom always deal
+// the most damage, so the MVP is whoever beat their own usual output by the most:
+// a big healing run from Stephen or a wall-like run from Andrew counts too.
+const PAR = { chachi: 1, tom: 0.8, stephen: 0.64, andrew: 0.38 };
+
 export function runMvp() {
-  let best = null, bestPts = -1;
+  let best = null, bestPts = 0;
   for (const id of HERO_IDS) {
     const t = heroTotals(id);
-    const pts = t.dealt + t.healed + t.taken / 2;
+    const pts = (t.dealt + t.healed + t.taken / 2) / (PAR[id] || 1);
     if (pts > bestPts) { best = id; bestPts = pts; }
   }
-  return bestPts > 0 ? best : null;
+  return best;
 }
 
 function entryForRun(won) {
