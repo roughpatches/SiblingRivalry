@@ -228,7 +228,13 @@ export const BANTER = [
 
 // Picks an exchange for this moment, or null if none fits. Floor-specific
 // exchanges are preferred on their floor; nothing repeats within a run.
-export function pickBanter(when, { standing, theme, seen }) {
+export function pickBanter(when, opts) {
+  const lines = pickBanterLines(when, opts);
+  return lines && lines.map(({ id, text }) => `${HERO_BY_ID[id].name}: "${text}"`);
+}
+
+// The same, as [{id, text}] so each line can be put in the speaker's mouth.
+export function pickBanterLines(when, { standing, theme, seen }) {
   const fits = BANTER.filter((b) => b.when.includes(when)
     && (!b.theme || b.theme === theme)
     && !seen.includes(b.id)
@@ -237,5 +243,5 @@ export function pickBanter(when, { standing, theme, seen }) {
   const themed = fits.filter((b) => b.theme);
   const b = themed.length && rng() < 0.7 ? rng.pick(themed) : rng.pick(fits);
   seen.push(b.id);
-  return b.lines.map(([id, text]) => `${HERO_BY_ID[id].name}: "${text}"`);
+  return b.lines.map(([id, text]) => ({ id, text }));
 }
