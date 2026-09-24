@@ -86,7 +86,7 @@ export default class LeaderboardScene extends Phaser.Scene {
   footer(b) {
     const note = b.family
       ? 'Every finished run by anyone this page is shared with lands here.'
-      : 'Runs on this device only. Play from the shared link to compete with the family.';
+      : 'Runs played in this browser. Everyone who plays keeps their own board.';
     this.add.text(44, H - 62, note, { ...T.small, wordWrap: { width: 700 } });
   }
 
