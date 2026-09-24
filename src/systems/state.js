@@ -21,7 +21,7 @@ export function newRun(seed = Math.floor(Math.random() * 1e9)) {
     id: d.id, level: 1, xp: 0, hp: 0, equip: { weapon: null, trinket: null }, perm: {},
   }));
   G.run = {
-    seed, party, gold: 20, floor: 1,
+    id: runId(), seed, party, gold: 20, floor: 1,
     bag: [makeConsumable('potion'), makeConsumable('potion'), makeConsumable('trailMix')],
     stats: { fights: 0, checks: 0, checksWon: 0, nat20: 0, nat1: 0, loot: 0 },
     banterSeen: [],
@@ -30,6 +30,21 @@ export function newRun(seed = Math.floor(Math.random() * 1e9)) {
   party.forEach((h) => (h.hp = heroStats(h).maxHp));
   G.run.map = generateFloor(1);
   return G.run;
+}
+
+// A unique id per run, so a run that keeps descending after the Hydra updates
+// its leaderboard entry instead of adding a second one.
+export function runId() {
+  return 'r' + Date.now().toString(36) + Math.floor(Math.random() * 36 ** 4).toString(36);
+}
+
+// Damage dealt, healing done and damage taken by one sibling this run.
+// Older saves have no totals yet, so they start from zero.
+export function heroTotals(id) {
+  const s = G.run.stats;
+  if (!s.heroes) s.heroes = {};
+  if (!s.heroes[id]) s.heroes[id] = { dealt: 0, healed: 0, taken: 0 };
+  return s.heroes[id];
 }
 
 export function heroStats(h) {

@@ -4,7 +4,8 @@ import { panel, button } from '../ui/widgets.js';
 import { backdrop } from '../ui/backdrop.js';
 import { heroKey, frameKey } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
-import { G, newRun, descend, heroStats } from '../systems/state.js';
+import { G, newRun, descend, heroStats, heroTotals } from '../systems/state.js';
+import { recordRun, runMvp } from '../systems/leaderboard.js';
 import { clearSave } from '../systems/save.js';
 import { sfx, stopMusic } from '../systems/sound.js';
 
@@ -43,19 +44,43 @@ export default class EndScene extends Phaser.Scene {
       `Reached floor ${G.run.floor}   ·   ${s.fights} fights won   ·   ${G.run.gold} gold`,
       `Skill checks passed: ${s.checksWon}/${s.checks}   ·   Nat 20s: ${s.nat20}   ·   Nat 1s: ${s.nat1}`,
     ];
-    this.add.text(W / 2, 330, lines.join('\n'), { ...T.body, align: 'center', color: hex(C.dim) }).setOrigin(0.5, 0);
+    this.add.text(W / 2, 318, lines.join('\n'), { ...T.body, align: 'center', color: hex(C.dim) }).setOrigin(0.5, 0);
+
+    // MVP, then the run's place on the leaderboard once it has been recorded.
+    const mvp = runMvp();
+    if (mvp) {
+      const t = heroTotals(mvp);
+      const best = [['dealt', 'damage'], ['healed', 'healed'], ['taken', 'soaked up']]
+        .sort((a, b) => t[b[0]] - t[a[0]])[0];
+      this.add.text(W / 2, 368, `MVP: ${HERO_BY_ID[mvp].name} (${t[best[0]].toLocaleString()} ${best[1]})`, { ...T.body, color: hex(C.gold) }).setOrigin(0.5, 0);
+    }
+    const rank = this.add.text(W / 2, 394, '', { ...T.small }).setOrigin(0.5, 0);
+    this.entry = null;
+    recordRun(win).then((r) => {
+      this.entry = r.entry;
+      if (!this.sys.isActive()) return;
+      if (r.rank === 1) rank.setText('New family record!').setColor(hex(C.gold));
+      else if (r.rank) rank.setText(`#${r.rank} on the family leaderboard${r.personalBest ? ', and your best run yet' : ''}.`);
+      else if (r.personalBest) rank.setText('Your best run yet.');
+    });
 
     if (win) {
-      button(this, W / 2 - 230, 410, 220, 46, 'Keep descending', () => {
+      button(this, W / 2 - 315, 424, 200, 46, 'Keep descending', () => {
         G.run.party.forEach((h) => { h.hp = heroStats(h).maxHp; });
         descend();
         this.go('Map', { intro: true });
       });
-      button(this, W / 2 + 10, 410, 220, 46, 'New run', () => { newRun(); this.go('Map', { intro: true }); });
+      button(this, W / 2 - 100, 424, 200, 46, 'New run', () => { newRun(); this.go('Map', { intro: true }); });
     } else {
-      button(this, W / 2 - 230, 410, 220, 46, 'Try again', () => { newRun(); this.go('Map', { intro: true }); });
-      button(this, W / 2 + 10, 410, 220, 46, 'Title screen', () => this.go('Title', {}), { color: C.dim });
+      button(this, W / 2 - 315, 424, 200, 46, 'Try again', () => { newRun(); this.go('Map', { intro: true }); });
+      button(this, W / 2 - 100, 424, 200, 46, 'Title screen', () => this.go('Title', {}), { color: C.dim });
     }
+    button(this, W / 2 + 115, 424, 200, 46, 'Leaderboard', () => this.openBoard(), { color: C.blue });
+  }
+
+  openBoard() {
+    this.scene.pause();
+    this.scene.launch('Leaderboard', { from: 'End', highlight: this.entry?.id });
   }
 
   go(key, data) {
