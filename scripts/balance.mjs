@@ -41,7 +41,7 @@ function autopilot({ runs, noPerks, casual, stuckMs }) {
     const r = window.__run();
     results.push({
       result, floor: r.floor, levels: r.party.map((h) => h.level), perks: r.party.map((h) => (h.perks || []).length),
-      fights: r.stats.fights, gold: r.gold, battles: run.battles, bossHp: run.bossHp, ms: Math.round(performance.now() - run.t0), ...extra,
+      fights: r.stats.fights, gold: r.gold, heroes: r.stats.heroes, battles: run.battles, bossHp: run.bossHp, ms: Math.round(performance.now() - run.t0), ...extra,
     });
     run = null;
   }
