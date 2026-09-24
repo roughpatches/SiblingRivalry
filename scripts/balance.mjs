@@ -2,13 +2,15 @@
 // Chromium (fast-forwarded with ?sim) and reports how runs go.
 //
 //   npm run build
-//   node scripts/balance.mjs [runs=40] [parallel=4] [--no-perks]
+//   node scripts/balance.mjs [runs=40] [parallel=4] [--no-perks] [--casual]
 //
 // Needs Playwright (npm i --no-save playwright). The autopilot plays like a
 // sensible player: explores each floor before the boss, heals when hurt,
 // buffs, focuses the weakest enemy, uses items when needed, equips better gear,
 // buys potions, sends the best sibling to skill checks and picks random perks.
-// It is a stand-in for real players, so treat its numbers as a guide.
+// It is a stand-in for real players, so treat its numbers as a guide. With
+// --casual it plays like someone mashing buttons instead: a random ready skill
+// on a random target, and potions only in emergencies. The two bracket real play.
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -16,6 +18,7 @@ const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const RUNS = Number(args[0] || 40);
 const PARALLEL = Number(args[1] || 4);
 const NO_PERKS = process.argv.includes('--no-perks');
+const CASUAL = process.argv.includes('--casual');
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 let chromium;
@@ -24,7 +27,7 @@ try { ({ chromium } = await import('playwright')); } catch {
 }
 
 // ------------------------------------------------------------------ autopilot (runs in the page)
-function autopilot({ runs, noPerks, stuckMs }) {
+function autopilot({ runs, noPerks, casual, stuckMs }) {
   const g = window.__game;
   const results = (window.__results = []);
   const S = (k) => g.scene.getScene(k);
@@ -165,6 +168,12 @@ function autopilot({ runs, noPerks, stuckMs }) {
     const item = (effect) => bag.find((it) => it.effect === effect);
     const S = (id, target) => ({ skill: ready(id), target });
 
+    if (casual) {
+      if (u.hp < u.max * 0.2 && item('heal')) return { item: item('heal'), target: u };
+      const options = u.def0.skills.map((s) => ready(s.id)).filter(Boolean);
+      const sk = options[Math.floor(Math.random() * options.length)];
+      return { skill: sk, target: sk.target === 'ally' ? H[Math.floor(Math.random() * H.length)] : E[Math.floor(Math.random() * E.length)] };
+    }
     if (down.length && item('revive') && !healerReady) return { item: item('revive'), target: down[0] };
     if (u.hp < u.max * 0.3 && item('heal') && !healerReady) return { item: item('heal'), target: u };
     if (E.length >= 3 && item('bomb')) return { item: item('bomb') };
@@ -249,7 +258,7 @@ const pages = await Promise.all(Array.from({ length: PARALLEL }, async (_, i) =>
   p.on('pageerror', (e) => errors.push(e.stack || String(e)));
   await p.goto(url);
   await p.waitForFunction(() => window.__game && window.__game.scene.isActive('Title'), null, { timeout: 30000 });
-  await p.evaluate(autopilot, { runs: Math.min(perPage, RUNS - i * perPage), noPerks: NO_PERKS, stuckMs: 20000 });
+  await p.evaluate(autopilot, { runs: Math.min(perPage, RUNS - i * perPage), noPerks: NO_PERKS, casual: CASUAL, stuckMs: 20000 });
   return { p, errors };
 }));
 const all = [];
@@ -268,7 +277,7 @@ const pct = (n, d) => (d ? `${Math.round((100 * n) / d)}%` : '-');
 const avg = (a) => (a.length ? (a.reduce((x, y) => x + y, 0) / a.length) : 0);
 const wins = all.filter((r) => r.result === 'win').length;
 const stuck = all.filter((r) => r.result === 'stuck');
-console.log(`\n${all.length} runs in ${Math.round((Date.now() - t0) / 1000)}s${NO_PERKS ? ' (perks disabled)' : ''}`);
+console.log(`\n${all.length} runs in ${Math.round((Date.now() - t0) / 1000)}s${NO_PERKS ? ' (perks disabled)' : ''}${CASUAL ? ' (casual player)' : ''}`);
 console.log(`Wins: ${wins} (${pct(wins, all.length)})   Losses: ${all.filter((r) => r.result === 'lose').length}   Stuck: ${stuck.length}`);
 for (const f of [1, 2, 3, 4]) {
   const reached = all.filter((r) => r.floor >= f).length;
