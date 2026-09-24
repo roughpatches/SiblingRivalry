@@ -9,7 +9,9 @@ import { perkById } from '../data/perks.js';
 export const PERK_LEVEL = 4;
 
 export const BAG_SIZE = 16;
-export const xpToNext = (lvl) => 24 + lvl * 18;
+// XP needed for the next level, tuned with scripts/balance.mjs.
+export const XP_BASE = 40, XP_PER_LEVEL = 40;
+export const xpToNext = (lvl) => XP_BASE + lvl * XP_PER_LEVEL;
 
 export const G = { run: null };
 

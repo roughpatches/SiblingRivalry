@@ -97,7 +97,7 @@ export const ENEMIES = {
   groomer: {
     short: 'Groomer', name: 'The Snow Groomer', shape: 'snowcat', boss: true, scale: 1.5,
     colors: { X: 0xe8843a, L: 0x9fc3e8, D: 0x9aa0a8, E: 0xfff2b0, K: 0x2a2d38, W: 0x6b6f78 },
-    hp: 170, atk: 13, def: 7, spd: 5, xp: 70, gold: 75,
+    hp: 210, atk: 15, def: 7, spd: 5, xp: 70, gold: 75,
     moves: [
       { name: 'Corduroy', type: 'hit', mult: 1.2, w: 3 },
       { name: 'Plow Through', type: 'aoe', mult: 0.7, w: 2 },
@@ -131,7 +131,7 @@ export const ENEMIES = {
   headTyping: {
     short: 'Mom', name: 'Head: "Mom is typing..."', shape: 'hydra', boss: true, scale: 1.2,
     colors: { X: 0x3f7fd9, L: 0x9cc3ff, D: 0x1f4585, E: 0xffffff, W: 0xffffff, M: 0x0b1a33 },
-    hp: 150, atk: 15, def: 6, spd: 4, xp: 60, gold: 60,
+    hp: 115, atk: 16, def: 6, spd: 4, xp: 60, gold: 60,
     moves: [
       { name: 'Voice Memo (4 min)', type: 'hit', mult: 1.2, w: 2 },
       { name: 'Typing...', type: 'charge', w: 2, release: { name: 'WALL OF TEXT', type: 'aoe', mult: 1.6 } },
@@ -140,7 +140,7 @@ export const ENEMIES = {
   headReplyAll: {
     short: 'ReplyAll', name: 'Head: Reply-All', shape: 'hydra', boss: true, scale: 1.2,
     colors: { X: 0x48a868, L: 0xa9e3b8, D: 0x22603a, E: 0xffffff, W: 0xffffff, M: 0x0a2414 },
-    hp: 130, atk: 14, def: 5, spd: 8, xp: 60, gold: 60,
+    hp: 100, atk: 15, def: 5, spd: 8, xp: 60, gold: 60,
     moves: [
       { name: 'Forwarded Chain Letter', type: 'aoe', mult: 0.7, w: 3 },
       { name: '"Did Everyone See This?"', type: 'poison', mult: 0.5, dot: 6, turns: 3, w: 1 },
@@ -149,13 +149,26 @@ export const ENEMIES = {
   headMeme: {
     short: 'Meme', name: 'Head: Minion Meme', shape: 'hydra', boss: true, scale: 1.2,
     colors: { X: 0xe8c63a, L: 0xfff09a, D: 0x8a6f12, E: 0x333333, W: 0xffffff, M: 0x3a2a05 },
-    hp: 110, atk: 13, def: 4, spd: 10, xp: 60, gold: 60,
+    hp: 85, atk: 14, def: 4, spd: 10, xp: 60, gold: 60,
     moves: [
       { name: 'Reacts with Laughing Face', type: 'heal', amount: 0.2, w: 2 },
       { name: 'Blurry Screenshot', type: 'debuff', mult: 0.6, status: 'defDown', turns: 2, w: 2 },
       { name: '"Thoughts??"', type: 'buff', status: 'atkUp', turns: 3, w: 1 },
     ],
   },
+};
+
+// Difficulty knobs, tuned with scripts/balance.mjs. Enemy HP and ATK are the
+// base stats above times these, growing on each deeper floor; bosses get extra
+// HP and ATK, and a lone boss acts more than once per round.
+export const TUNING = {
+  enemyHp: 1.45,
+  enemyAtk: 2.4,
+  hpPerFloor: 0.1,
+  atkPerFloor: 0.22,
+  bossHp: 1.1,
+  bossAtk: 1.15,
+  soloBossActions: 2,
 };
 
 export const FLOORS = [

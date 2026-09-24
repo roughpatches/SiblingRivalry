@@ -50,3 +50,23 @@ npm run build    # one self-contained dist/index.html (fonts and Phaser inlined)
 | `src/systems/dungeon.js` | Floor generation |
 | `src/systems/sound.js` | Sound effects and the music loops for each floor |
 | `src/systems/save.js` | Save and continue |
+| `src/systems/state.js` | XP curve (`XP_BASE`, `XP_PER_LEVEL`) and hero stat math |
+
+## Balance check
+
+`TUNING` in `src/data/enemies.js` holds the difficulty knobs: enemy HP and ATK multipliers,
+how much tougher each floor gets, the boss bonus, and how many actions a lone boss takes per round.
+
+`scripts/balance.mjs` plays the game with an autopilot in headless Chromium and reports how runs go
+(win rate, party HP going into each boss, level at each boss, which fights were fatal):
+
+```bash
+npm run build
+npm i --no-save playwright
+node scripts/balance.mjs 20 4            # 20 runs, 4 at a time, with a strong player policy
+node scripts/balance.mjs 20 4 --casual   # a careless player: random skills and targets
+```
+
+Set `CHROMIUM_PATH` if Playwright can't find a browser. The script opens the build with `?sim=30`,
+a dev-only mode that runs the game clock 30x faster and skips drawing.
+Raw per-battle results land in `dist/balance-results.json`.

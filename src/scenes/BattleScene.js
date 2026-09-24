@@ -7,7 +7,7 @@ import * as fx from '../ui/fx.js';
 import { sfx, music, stopMusic } from '../systems/sound.js';
 import { buildBaseTextures, heroKey, portraitKey, enemyTexture, frameKey, idleAnim } from '../art/sprites.js';
 import { HERO_BY_ID } from '../data/heroes.js';
-import { ENEMIES, FLOORS, floorDef } from '../data/enemies.js';
+import { ENEMIES, FLOORS, TUNING, floorDef } from '../data/enemies.js';
 import { makeGear, makeConsumable, statLine } from '../data/items.js';
 import { G, heroStats, gainXp, addToBag, removeFromBag, pickLine, banterSeen } from '../systems/state.js';
 import { pickBanter } from '../data/banter.js';
@@ -103,11 +103,14 @@ export default class BattleScene extends Phaser.Scene {
       const [x, y] = positions[i];
       counts[id] = (counts[id] || 0) + 1;
       const dup = ids.filter((k) => k === id).length > 1;
-      const hpMult = this.kind === 'mimic' ? 1.4 * (1 + 0.4 * (G.run.floor - 1)) : 1;
+      const deeper = Math.min(G.run.floor, FLOORS.length) - 1;
+      const hpMult = (this.kind === 'mimic' ? 1.4 * (1 + 0.4 * (G.run.floor - 1)) : 1)
+        * (1 + TUNING.hpPerFloor * deeper) * (def.boss ? TUNING.bossHp : 1);
+      const atkMult = (1 + TUNING.atkPerFloor * deeper) * (def.boss ? TUNING.bossAtk : 1);
       const u = {
         side: 'enemy', id, spec: def, name: dup ? `${def.name} ${'ABC'[counts[id] - 1]}` : def.name,
-        hp: Math.round(def.hp * 1.15 * sc * hpMult), max: Math.round(def.hp * 1.15 * sc * hpMult),
-        atk: Math.round(def.atk * 1.15 * (1 + 0.35 * loop) * (this.kind === 'mimic' ? 1 + 0.2 * (G.run.floor - 1) : 1)),
+        hp: Math.round(def.hp * TUNING.enemyHp * sc * hpMult), max: Math.round(def.hp * TUNING.enemyHp * sc * hpMult),
+        atk: Math.round(def.atk * TUNING.enemyAtk * atkMult * (1 + 0.35 * loop) * (this.kind === 'mimic' ? 1 + 0.2 * (G.run.floor - 1) : 1)),
         def: def.def + loop * 2, spd: def.spd, crit: 0,
         xp: Math.round(def.xp * sc * (this.kind === 'mimic' ? 1.5 : 1)), gold: Math.round(def.gold * sc),
         statuses: {}, alive: true, x, y, boss: !!def.boss, shield: 0,
@@ -243,6 +246,12 @@ export default class BattleScene extends Phaser.Scene {
     this.order = this.units.filter((u) => u.alive)
       .map((u) => ({ u, k: this.effSpd(u) + rng() * 3 }))
       .sort((a, b) => b.k - a.k).map((o) => o.u);
+    // A lone boss gets extra actions, slotted into the middle of the round.
+    const bosses = this.liveEnemies().filter((e) => e.boss);
+    if (bosses.length === 1) {
+      for (let i = 1; i < TUNING.soloBossActions; i++) this.order.splice(Math.ceil(this.order.length / 2), 0, bosses[0]);
+    }
+    this.units.forEach((u) => { u.actedThisRound = false; });
     this.turnIdx = 0;
     this.nextTurn();
   }
@@ -271,8 +280,11 @@ export default class BattleScene extends Phaser.Scene {
     this.units.forEach((x) => x.ring.setVisible(false));
     u.ring.setVisible(true);
 
-    // start-of-turn effects
-    if (u.statuses.poison) {
+    // start-of-turn effects (only on a unit's first action of the round, so a
+    // boss's bonus action doesn't tick poison or shorten statuses twice)
+    const bonusAction = u.actedThisRound;
+    u.actedThisRound = true;
+    if (!bonusAction && u.statuses.poison) {
       const p = u.statuses.poison;
       this.applyRawDamage(u, p.val, C.green);
       this.log(`${u.name} takes ${p.val} from lingering effects.`);
@@ -280,10 +292,12 @@ export default class BattleScene extends Phaser.Scene {
       if (this.checkEnd()) return;
       if (!u.alive) return this.endTurn(u);
     }
-    for (const k of ['atkUp', 'atkDown', 'defUp', 'defDown', 'spdUp', 'taunt', 'poison']) {
-      if (u.statuses[k]) { u.statuses[k].turns -= 1; if (u.statuses[k].turns <= 0) delete u.statuses[k]; }
+    if (!bonusAction) {
+      for (const k of ['atkUp', 'atkDown', 'defUp', 'defDown', 'spdUp', 'taunt', 'poison']) {
+        if (u.statuses[k]) { u.statuses[k].turns -= 1; if (u.statuses[k].turns <= 0) delete u.statuses[k]; }
+      }
+      if (u.cds) for (const k in u.cds) if (u.cds[k] > 0) u.cds[k] -= 1;
     }
-    if (u.cds) for (const k in u.cds) if (u.cds[k] > 0) u.cds[k] -= 1;
     this.refreshTags(u);
 
     if (u.statuses.stun) {
