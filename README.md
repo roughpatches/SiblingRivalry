@@ -24,10 +24,12 @@ Every finished run goes on the leaderboard (title screen, top left, or the end-o
 the deepest runs, who played them, and each run's MVP sibling (most damage dealt, healing done,
 and hits soaked up). The **Sibling MVPs** tally keeps score of which sibling carries the family.
 
-- In the published page, runs are shared with everyone the page is shared with. Each player's runs
-  live in one document, `runs/<their id>`, that only they can write; names are looked up when the
-  board is drawn, never stored.
-- Anywhere else (local dev, a saved copy), the board keeps this device's runs in localStorage.
+- By default the board keeps the runs played in this browser, in localStorage. That's how the
+  shared link is published today, so the link stays publicly shareable.
+- The game also supports a shared family board. Publishing the page with a database (the artifact
+  `db` capability, plus `user` for names) shares runs with everyone the page is shared with, but a
+  page with a database can't be shared by public link. Each player's runs live in one document,
+  `runs/<their id>`, that only they can write; names are looked up when the board is drawn, never stored.
 
 ## How a run works
 
@@ -63,6 +65,18 @@ and hits soaked up). The **Sibling MVPs** tally keeps score of which sibling car
 | `src/systems/save.js` | Save and continue |
 | `src/systems/leaderboard.js` | Recording runs and reading the family leaderboard |
 | `src/systems/state.js` | XP curve (`XP_BASE`, `XP_PER_LEVEL`) and hero stat math |
+
+## Checks
+
+Every pull request runs `.github/workflows/build.yml`: it builds the game, then `scripts/smoke.mjs`
+opens the build in headless Chromium, starts a run, plays one fight and opens the leaderboard,
+failing on any error. To run it locally:
+
+```bash
+npm run build
+npm i --no-save playwright
+node scripts/smoke.mjs
+```
 
 ## Balance check
 
