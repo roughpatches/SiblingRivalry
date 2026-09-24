@@ -106,7 +106,7 @@ export default class BattleScene extends Phaser.Scene {
       const deeper = Math.min(G.run.floor, FLOORS.length) - 1;
       const hpMult = (this.kind === 'mimic' ? 1.4 * (1 + 0.4 * (G.run.floor - 1)) : 1)
         * (1 + TUNING.hpPerFloor * deeper) * (def.boss ? TUNING.bossHp : 1);
-      const atkMult = 1 + TUNING.atkPerFloor * deeper;
+      const atkMult = (1 + TUNING.atkPerFloor * deeper) * (def.boss ? TUNING.bossAtk : 1);
       const u = {
         side: 'enemy', id, spec: def, name: dup ? `${def.name} ${'ABC'[counts[id] - 1]}` : def.name,
         hp: Math.round(def.hp * TUNING.enemyHp * sc * hpMult), max: Math.round(def.hp * TUNING.enemyHp * sc * hpMult),
