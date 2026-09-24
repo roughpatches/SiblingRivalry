@@ -18,6 +18,17 @@ npm run build    # one self-contained dist/index.html (fonts and Phaser inlined)
 - All music and sound effects are synthesized in code. Click the speaker in the top-right corner,
   or press **M**, to mute; the choice is remembered.
 
+## Family leaderboard
+
+Every finished run goes on the leaderboard (title screen, top left, or the end-of-run screen):
+the deepest runs, who played them, and each run's MVP sibling (most damage dealt, healing done,
+and hits soaked up). The **Sibling MVPs** tally keeps score of which sibling carries the family.
+
+- In the published page, runs are shared with everyone the page is shared with. Each player's runs
+  live in one document, `runs/<their id>`, that only they can write; names are looked up when the
+  board is drawn, never stored.
+- Anywhere else (local dev, a saved copy), the board keeps this device's runs in localStorage.
+
 ## How a run works
 
 - **Map**: each floor is a random tree of rooms on a 7x5 grid. Click a lit doorway to move.
@@ -50,6 +61,7 @@ npm run build    # one self-contained dist/index.html (fonts and Phaser inlined)
 | `src/systems/dungeon.js` | Floor generation |
 | `src/systems/sound.js` | Sound effects and the music loops for each floor |
 | `src/systems/save.js` | Save and continue |
+| `src/systems/leaderboard.js` | Recording runs and reading the family leaderboard |
 | `src/systems/state.js` | XP curve (`XP_BASE`, `XP_PER_LEVEL`) and hero stat math |
 
 ## Balance check

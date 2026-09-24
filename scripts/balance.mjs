@@ -262,9 +262,13 @@ const pages = await Promise.all(Array.from({ length: PARALLEL }, async (_, i) =>
   return { p, errors };
 }));
 const all = [];
+const mvp = {};
 await Promise.all(pages.map(async ({ p, errors }, i) => {
   await p.waitForFunction(() => window.__done, null, { timeout: 0, polling: 2000 });
   const res = await p.evaluate(() => window.__results);
+  // Each finished run lands on this browser's local leaderboard, MVP included.
+  const board = JSON.parse(await p.evaluate(() => localStorage.getItem('sibling-rivalry-board')) || '{}');
+  for (const [id, n] of Object.entries(board.mvp || {})) mvp[id] = (mvp[id] || 0) + n;
   const errs = await p.evaluate(() => window.__errors || []);
   errors.push(...errs);
   all.push(...res.map((r) => ({ ...r, page: i })));
@@ -290,6 +294,7 @@ for (const f of [1, 2, 3, 4]) {
 }
 const levels = all.map((r) => avg(r.levels));
 console.log(`Final level avg ${avg(levels).toFixed(1)} | perks per sibling avg ${avg(all.map((r) => avg(r.perks))).toFixed(1)} | fights won avg ${avg(all.map((r) => r.fights)).toFixed(1)}`);
+console.log('Run MVPs:', Object.entries(mvp).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ') || 'none');
 const killers = {};
 for (const r of all.filter((x) => x.result === 'lose')) { const b = r.battles.at(-1); const k = `F${b.floor} ${b.kind}: ${b.enemies.join(', ')}`; killers[k] = (killers[k] || 0) + 1; }
 console.log('Fatal fights:', Object.entries(killers).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `${v}x ${k}`).join(' | ') || 'none');

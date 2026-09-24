@@ -9,7 +9,7 @@ import { buildBaseTextures, heroKey, portraitKey, enemyTexture, frameKey, idleAn
 import { HERO_BY_ID } from '../data/heroes.js';
 import { ENEMIES, FLOORS, TUNING, floorDef } from '../data/enemies.js';
 import { makeGear, makeConsumable, statLine } from '../data/items.js';
-import { G, heroStats, gainXp, addToBag, removeFromBag, pickLine, banterSeen } from '../systems/state.js';
+import { G, heroStats, gainXp, addToBag, removeFromBag, pickLine, banterSeen, heroTotals } from '../systems/state.js';
 import { pickBanter } from '../data/banter.js';
 import { perkMods, perksForSkill } from '../data/perks.js';
 import { rng, d20 } from '../systems/rng.js';
@@ -487,7 +487,7 @@ export default class BattleScene extends Phaser.Scene {
         const amt = Math.round(target.max * (0.4 + (m.receipt || 0)));
         this.log(`Stephen unfurls a four-foot receipt over ${target.name}.`);
         fx.receipt(this, target);
-        this.heal(target, amt);
+        this.credit(u, 'healed', this.heal(target, amt));
         break;
       }
       case 'precedent': {
@@ -506,7 +506,7 @@ export default class BattleScene extends Phaser.Scene {
         fx.crosses(this, this.heroes());
         for (const h of this.heroes()) {
           if (!h.alive) this.revive(h, 0.2);
-          else this.heal(h, Math.round(h.max * 0.25));
+          else this.credit(u, 'healed', this.heal(h, Math.round(h.max * 0.25)));
           for (const k of ['poison', 'atkDown', 'defDown', 'stun', 'sleep']) delete h.statuses[k];
           this.refreshTags(h);
         }
@@ -678,6 +678,13 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------------ combat math
+  // Per-sibling totals for the run, used to name the MVP on the leaderboard.
+  credit(u, key, amount) {
+    if (!amount || u.side !== 'hero') return;
+    const t = heroTotals(u.id);
+    t[key] += amount;
+  }
+
   // Returns damage dealt (0 on miss).
   attack(src, tgt, mult, opts = {}) {
     const roll = d20();
@@ -697,6 +704,7 @@ export default class BattleScene extends Phaser.Scene {
     if (crit) dmg *= 1.8;
     dmg = Math.max(1, Math.round(dmg));
     const dealt = this.applyRawDamage(tgt, dmg, crit ? C.gold : C.parch, crit);
+    if (src.side === 'hero') this.credit(src, 'dealt', dealt);
     if (!opts.quiet || crit) this.log(`${crit ? 'CRIT! ' : ''}${src.name}'s ${opts.verb} hits ${tgt.name} for ${dealt}.`);
     return dealt || 1;
   }
@@ -707,6 +715,7 @@ export default class BattleScene extends Phaser.Scene {
     if (tgt.shield > 0) { absorbed = Math.min(tgt.shield, dmg); tgt.shield -= absorbed; dmg -= absorbed; }
     if (tgt.statuses.sleep && dmg > 0) delete tgt.statuses.sleep;
     tgt.hp -= dmg;
+    if (tgt.side === 'hero') this.credit(tgt, 'taken', dmg + absorbed);
     if (tgt.hp <= 0 && tgt.id === 'chachi' && tgt.side === 'hero' && tgt.windsUsed < 1 + (tgt.mods?.secondWind || 0)) {
       tgt.windsUsed += 1;
       tgt.hp = 1;
@@ -734,7 +743,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   heal(u, amt, quiet) {
-    if (!u.alive) return;
+    if (!u.alive) return 0;
     const before = u.hp;
     u.hp = Math.min(u.max, u.hp + amt);
     const got = u.hp - before;
@@ -745,6 +754,7 @@ export default class BattleScene extends Phaser.Scene {
     this.sparkle(u, C.green);
     if (!quiet) this.log(`${u.name} recovers ${got} HP.`);
     this.refreshTags(u);
+    return got;
   }
 
   revive(u, pct) {

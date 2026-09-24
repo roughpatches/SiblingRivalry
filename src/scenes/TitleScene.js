@@ -54,6 +54,10 @@ export default class TitleScene extends Phaser.Scene {
     this.add.text(W / 2, 510, isTouch(this)
       ? 'Tap rooms to explore  ·  Turn-based fights  ·  d20 skill checks  ·  Hold a skill or room to read about it'
       : 'Click rooms to explore  ·  Turn-based fights  ·  d20 skill checks  ·  Press 1-5 for skills in battle', { ...T.small }).setOrigin(0.5);
+    button(this, 16, 12, 150, 32, 'Leaderboard', () => {
+      this.scene.pause();
+      this.scene.launch('Leaderboard', { from: 'Title' });
+    }, { fontSize: '20px', color: C.blue });
     this.input.keyboard?.once('keydown-ENTER', () => (saved ? this.resume() : this.start()));
     b.setDepth(2);
   }

@@ -9,6 +9,8 @@ import EventScene from './scenes/EventScene.js';
 import PartyScene from './scenes/PartyScene.js';
 import EndScene from './scenes/EndScene.js';
 import HudScene from './scenes/HudScene.js';
+import LeaderboardScene from './scenes/LeaderboardScene.js';
+import { connect } from './systems/leaderboard.js';
 import { unlockAudio, soundDebug, music, sfx } from './systems/sound.js';
 import { G, descend, heroStats } from './systems/state.js';
 
@@ -45,6 +47,9 @@ function enableSim(game, speed) {
   game.events.once('ready', () => { game.scene.render = () => {}; });
 }
 
+// Start reaching the shared leaderboard early, so it's ready by the first run's end.
+connect();
+
 fontsReady().then(() => {
   document.getElementById('boot')?.remove();
   window.__game = new Phaser.Game({
@@ -56,7 +61,7 @@ fontsReady().then(() => {
     pixelArt: true,
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     // Hud is last so it draws above every other scene.
-    scene: [TitleScene, MapScene, BattleScene, EventScene, PartyScene, EndScene, HudScene],
+    scene: [TitleScene, MapScene, BattleScene, EventScene, PartyScene, EndScene, LeaderboardScene, HudScene],
   });
   if (SIM !== null) enableSim(window.__game, Number(SIM) || 25);
 });
